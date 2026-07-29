@@ -257,6 +257,8 @@ def github_trending():
             "url": "https://github.com" + path,
             "summary": clean(desc.group(1)) if desc else "",
             "score": int(stars.group(1).replace(",", "")) if stars else 0,
+            "created_at": "",
+            "time_label": "今日榜单抓取",
         })
     return result[:25]
 
@@ -269,6 +271,7 @@ def hacker_news():
         "url": hit.get("url") or "https://news.ycombinator.com/item?id=" + hit["objectID"],
         "summary": f"这条内容在 Hacker News 获得 {hit.get('points', 0)} 分，并有 {hit.get('num_comments', 0)} 条讨论。",
         "score": int(hit.get("points") or 0),
+        "created_at": hit.get("created_at", ""),
     } for hit in data.get("hits", []) if hit.get("title") or hit.get("story_title")][:30]
 
 
@@ -287,6 +290,7 @@ def product_hunt():
                 "url": url,
                 "summary": clean(entry.findtext(ns + "content") or entry.findtext(ns + "summary")),
                 "score": 0,
+                "created_at": entry.findtext(ns + "updated") or entry.findtext(ns + "published") or "",
             })
     return result[:25]
 
@@ -321,6 +325,8 @@ def chinese_indie_apps():
                     "url": url.strip(),
                     "summary": f"{description}（{date_text} 收录）",
                     "score": max(90 - index * 15, 50),
+                    "created_at": date_text,
+                    "time_label": "收录时间",
                 })
     return result[:20]
 
@@ -342,6 +348,7 @@ def scrapling_updates():
         "url": data.get("html_url") or "https://github.com/D4Vinci/Scrapling",
         "summary": notes or "Scrapling 发布了新版本：它是一套能适应网页变化、支持动态页面和批量任务的网页采集工具。",
         "score": 80,
+        "created_at": published,
     }]
 
 
@@ -455,6 +462,20 @@ def parse_time(value):
         return datetime.min.replace(tzinfo=ZoneInfo("UTC"))
 
 
+def display_time(item):
+    value = item.get("created_at", "")
+    label = item.get("time_label", "发布时间")
+    if value:
+        parsed = parse_feed_time(str(value))
+        if parsed:
+            return f"{label}：{parsed.astimezone(ZoneInfo('Asia/Shanghai')):%Y-%m-%d %H:%M}"
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(value)):
+            return f"{label}：{value}"
+    if item.get("time_label") == "今日榜单抓取":
+        return f"榜单时间：{datetime.now(ZoneInfo('Asia/Shanghai')):%Y-%m-%d %H:%M}"
+    return "发布时间：原始来源未提供"
+
+
 def select_builder_items(items, now):
     candidates = [item for item in items if item["source"] == "AI 人物与观点"]
     useful_words = AI_WORDS + ("product", "build", "startup", "codex", "claude",
@@ -542,6 +563,7 @@ def builder_card(item):
         '<div style="padding:15px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:10px 0">'
         f'<div style="font-size:16px;font-weight:700">{html.escape(item["title"])} '
         f'<span style="font-size:12px;color:#7c3aed">· {html.escape(item["kind"])}</span></div>'
+        f'<div style="margin-top:5px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
         f'<div style="margin-top:7px">{tag_html(item)}</div>'
         f'<div style="margin-top:8px;line-height:1.65"><b>{html.escape(item.get("ai_first_label", "核心观点"))}：</b>{html.escape(said)}</div>'
         f'<div style="margin-top:8px;line-height:1.65"><b>{html.escape(item.get("ai_second_label", "为什么现在值得注意"))}：</b>{html.escape(item.get("ai_second_value", why))}</div>'
@@ -603,6 +625,7 @@ def editorial_card(item, number=None):
         f'<div style="font-size:16px;font-weight:700">{prefix}<a style="color:#2563eb;text-decoration:none" '
         f'href="{html.escape(item["url"], quote=True)}">{html.escape(item["title"])}</a></div>'
         f'<div style="margin-top:5px;color:#6b7280;font-size:12px">{html.escape(item["source"])} · {kind}</div>'
+        f'<div style="margin-top:4px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
         f'<div style="margin-top:7px">{tag_html(item)}</div>'
         f'<div style="margin-top:7px;color:#374151;line-height:1.65"><b>{first_label}：</b>{html.escape(first_value)}</div>'
         f'<div style="margin-top:7px;color:#374151;line-height:1.65"><b>{second_label}：</b>{html.escape(second_value)}</div>'
@@ -616,6 +639,7 @@ def compact_link(item):
         '<div style="padding:10px 0;border-bottom:1px solid #e5e7eb;line-height:1.5">'
         f'{tag_html(item)}<br><a href="{html.escape(item["url"], quote=True)}" '
         f'style="color:#2563eb;text-decoration:none;font-weight:600">{html.escape(item["title"])}</a>'
+        f'<div style="margin-top:3px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
         f'<div style="margin-top:5px;color:#475569">{html.escape(summary)}</div></div>'
     )
 
@@ -706,7 +730,7 @@ def render(items, errors):
         if len(authoritative_more) == 5:
             break
     used_urls = highlight_urls | {x["url"] for x in authoritative_more}
-    indie = [x for x in items if x["source"] == "独立开发者新品"][:4]
+    indie = [x for x in items if x["source"] == "独立开发者新品"][:3]
     used_urls |= {x["url"] for x in indie}
     builders = [x for x in select_builder_items(items, now) if x["url"] not in used_urls][:3]
     used_urls |= {x["url"] for x in builders}
@@ -714,7 +738,15 @@ def render(items, errors):
                   and x["source"] not in ("独立开发者新品", "AI 人物与观点")]
     tech = sorted(discovered, key=rank, reverse=True)[:4]
     used_urls |= {x["url"] for x in tech}
-    more = sorted([x for x in items if x["url"] not in used_urls and
+    original_sources = ("GitHub Trending", "Hacker News", "Product Hunt", "关注项目 · Scrapling")
+    trend_latest = sorted(
+        [x for x in items if x["source"] in original_sources and x["url"] not in used_urls],
+        key=lambda x: (parse_time(x.get("created_at")), x.get("score", 0)), reverse=True,
+    )[:5]
+    used_urls |= {x["url"] for x in trend_latest}
+    more = sorted([x for x in items if x["url"] not in used_urls
+                   and x["source"] != "独立开发者新品"
+                   and x["source"] not in original_sources and
                    (x["source"] != "AI 人物与观点" or len(x.get("summary", "")) >= 120)],
                   key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:8]
     selected = highlights + authoritative_more + indie + builders + tech
@@ -732,10 +764,11 @@ def render(items, errors):
 <div style="margin-top:9px;line-height:2">
 <a href="#highlights" style="color:#2563eb">一、本期看点</a><br>
 <a href="#authority" style="color:#2563eb">二、权威资讯与行业变化</a><br>
-<a href="#apps" style="color:#2563eb">三、实用产品与应用</a><br>
-<a href="#voices" style="color:#2563eb">四、人物与观点</a><br>
-<a href="#tech" style="color:#2563eb">五、开源、模型与研究</a><br>
-<a href="#more" style="color:#2563eb">六、更多资讯</a>
+<a href="#voices" style="color:#2563eb">三、人物与观点</a><br>
+<a href="#tech" style="color:#2563eb">四、开源、模型与研究</a><br>
+<a href="#more" style="color:#2563eb">五、更多资讯</a><br>
+<a href="#apps" style="color:#2563eb">六、今日独立开发者新品</a><br>
+<a href="#trends" style="color:#2563eb">七、原始趋势源·今日速览</a>
 </div></div>
 <a id="highlights" name="highlights"></a>
 <div style="padding:18px;background:#fff7ed;border-radius:10px;margin-bottom:18px">
@@ -748,27 +781,33 @@ def render(items, errors):
 <h2 style="color:#334155">二、权威资讯与行业变化</h2>{back_to_toc()}
 {''.join(editorial_card(x, i) for i, x in enumerate(authoritative_more, 1)) if authoritative_more else '<p>本期暂无补充。</p>'}
 </div>
-<a id="apps" name="apps"></a>
-<div style="padding:18px;background:#f0fdf4;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#166534">三、实用产品与应用</h2>{back_to_toc()}
-<p style="color:#475569;line-height:1.6">关注能直接使用的产品，重点说明它能干什么、上手是否麻烦。</p>
-{''.join(editorial_card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的主榜应用。</p>'}
-</div>
 <a id="voices" name="voices"></a>
 <div style="padding:18px;background:#f5f3ff;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#6d28d9">四、人物与观点</h2>{back_to_toc()}
+<h2 style="color:#6d28d9">三、人物与观点</h2>{back_to_toc()}
 <p style="color:#475569;line-height:1.6">只保留有完整论点、实际经验或明确判断的内容。</p>
 {''.join(builder_card(x) for x in builders) if builders else '<p>本次中央 Feed 暂无足够有信息量的新内容。</p>'}
 </div>
 <a id="tech" name="tech"></a>
 <div style="padding:18px;background:#eff6ff;border-radius:10px">
-<h2 style="color:#1d4ed8">五、开源、模型与研究</h2>{back_to_toc()}
+<h2 style="color:#1d4ed8">四、开源、模型与研究</h2>{back_to_toc()}
 <p style="color:#475569;line-height:1.6">榜单只负责发现线索，优先保留真正解决问题或带来能力变化的项目。</p>
 {''.join(editorial_card(x, i) for i, x in enumerate(tech, 1))}
 </div>
-<a id="more" name="more"></a><h1>六、更多资讯</h1>{back_to_toc()}
+<a id="more" name="more"></a><h1>五、更多资讯</h1>{back_to_toc()}
 <p style="color:#64748b">每条保留一句话摘要，不再只列标题。</p>
 {''.join(compact_link(x) for x in more)}
+<a id="apps" name="apps"></a>
+<div style="padding:18px;background:#f0fdf4;border-radius:10px;margin:20px 0">
+<h2 style="color:#166534">六、今日独立开发者新品</h2>{back_to_toc()}
+<p style="color:#475569;line-height:1.6">保留 Chinese Independent Developer，每期只展示当天或最近一批的 3 个最新应用。</p>
+{''.join(editorial_card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的应用。</p>'}
+</div>
+<a id="trends" name="trends"></a>
+<div style="padding:18px;background:#f8fafc;border-radius:10px;margin-bottom:18px">
+<h2 style="color:#334155">七、原始趋势源·今日速览</h2>{back_to_toc()}
+<p style="color:#64748b">保留最早的 TrendingAI 发现方式，只放 GitHub Trending、Hacker News、Product Hunt 和关注项目中当天最新的少量内容。</p>
+{''.join(compact_link(x) for x in trend_latest) if trend_latest else '<p>本次没有未收录的今日趋势内容。</p>'}
+</div>
 <h2 style="margin-top:24px">来源状态</h2>{warning}
 <p style="color:#9ca3af;font-size:12px">每日 AI 日报自动整理。</p>
 </div></body></html>"""
