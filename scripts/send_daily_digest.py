@@ -15,7 +15,6 @@ from email.message import EmailMessage
 from zoneinfo import ZoneInfo
 
 UA = "Mozilla/5.0 (compatible; TrendingAI-Digest/2.0)"
-DEFAULT_RECIPIENTS = ("348897402@qq.com", "yutx24@qq.com")
 AI_WORDS = ("ai", "agent", "llm", "gpt", "model", "machine learning",
             "transformer", "diffusion", "inference", "rag", "copilot",
             "multimodal", "人工智能", "大模型", "机器人")
@@ -458,9 +457,8 @@ def render(items, errors):
 def main():
     sender = os.environ["QQ_EMAIL"].strip()
     auth_code = os.environ["QQ_SMTP_AUTH_CODE"].strip()
-    configured = os.environ.get("DIGEST_RECIPIENTS") or os.environ.get("DIGEST_RECIPIENT", "")
+    configured = os.environ.get("DIGEST_RECIPIENTS") or os.environ.get("DIGEST_RECIPIENT", sender)
     recipients = [address.strip() for address in configured.split(",") if address.strip()]
-    recipients.extend(DEFAULT_RECIPIENTS)
     recipients = list(dict.fromkeys(recipients))
     items, errors = collect()
     subject, body = render(items, errors)
