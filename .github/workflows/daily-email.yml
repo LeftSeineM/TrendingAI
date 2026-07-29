@@ -26,5 +26,5 @@ jobs:
         env:
           QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
           QQ_SMTP_AUTH_CODE: ${{ secrets.QQ_SMTP_AUTH_CODE }}
-          DIGEST_RECIPIENT: 348897402@qq.com
+          DIGEST_RECIPIENTS: ${{ vars.DIGEST_RECIPIENTS }}
         run: python scripts/send_daily_digest.py
