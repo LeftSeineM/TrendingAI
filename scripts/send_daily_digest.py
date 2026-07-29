@@ -8,15 +8,25 @@ import re
 import smtplib
 import ssl
 import urllib.request
+import urllib.parse
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.message import EmailMessage
 from zoneinfo import ZoneInfo
 
 UA = "Mozilla/5.0 (compatible; TrendingAI-Digest/2.0)"
+DEFAULT_RECIPIENTS = ("348897402@qq.com", "yutx24@qq.com")
 AI_WORDS = ("ai", "agent", "llm", "gpt", "model", "machine learning",
             "transformer", "diffusion", "inference", "rag", "copilot",
             "multimodal", "人工智能", "大模型", "机器人")
+APP_WORDS = ("app", "desktop", "mobile", "browser", "productivity", "voice",
+             "video", "image", "file", "download", "design", "工具", "应用",
+             "效率", "语音", "视频", "文件", "下载", "设计")
+BUILDER_FEEDS = {
+    "X 动态": "https://raw.githubusercontent.com/zarazhangrui/follow-builders/main/feed-x.json",
+    "播客": "https://raw.githubusercontent.com/zarazhangrui/follow-builders/main/feed-podcasts.json",
+    "官方博客": "https://raw.githubusercontent.com/zarazhangrui/follow-builders/main/feed-blogs.json",
+}
 
 TOPICS = (
     (("agent", "copilot", "automation", "workflow", "智能体"),
@@ -63,6 +73,25 @@ def fetch(url, accept="text/html,application/json,application/xml"):
 def clean(text):
     text = re.sub(r"<[^>]+>", " ", text or "")
     return re.sub(r"\s+", " ", html.unescape(text)).strip()
+
+
+def translate_zh(text):
+    """Best-effort public translation; retain the original when unavailable."""
+    text = clean(text)[:1000]
+    if not text or sum(ord(char) < 128 for char in text) < len(text) * 0.65:
+        return text
+    query = urllib.parse.urlencode({
+        "client": "gtx", "sl": "auto", "tl": "zh-CN", "dt": "t", "q": text,
+    })
+    try:
+        data = json.loads(fetch(
+            "https://translate.googleapis.com/translate_a/single?" + query,
+            "application/json",
+        ).decode("utf-8"))
+        translated = "".join(part[0] for part in data[0] if part and part[0])
+        return clean(translated) or text
+    except Exception:
+        return text
 
 
 def github_trending():
@@ -115,15 +144,144 @@ def product_hunt():
     return result[:25]
 
 
+def chinese_indie_apps():
+    """Read the newest application entries from the main independent-developer board."""
+    raw = fetch(
+        "https://raw.githubusercontent.com/1c7/chinese-independent-developer/"
+        "master/README.md",
+        "text/plain",
+    ).decode("utf-8", "replace")
+    headings = list(re.finditer(
+        r"(?m)^###\s*(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]添加\s*$",
+        raw,
+    ))
+    result = []
+    for index, heading in enumerate(headings[:3]):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(raw)
+        section = raw[heading.end():end]
+        date_text = f"{heading.group(1)}-{int(heading.group(2)):02d}-{int(heading.group(3)):02d}"
+        for match in re.finditer(
+            r"(?m)^\s*[*-]\s*(?::white_check_mark:|:clock\d*:|✅|🕗)?\s*"
+            r"\[([^\]]+)\]\((https?://[^)]+)\)\s*[：:]\s*(.+?)\s*$",
+            section,
+        ):
+            title, url, description = match.groups()
+            description = clean(description)
+            if title and description:
+                result.append({
+                    "source": "独立开发者新品",
+                    "title": title.strip(),
+                    "url": url.strip(),
+                    "summary": f"{description}（{date_text} 收录）",
+                    "score": max(90 - index * 15, 50),
+                })
+    return result[:20]
+
+
+def scrapling_updates():
+    """Include Scrapling only when a recent release is available."""
+    data = json.loads(fetch(
+        "https://api.github.com/repos/D4Vinci/Scrapling/releases/latest",
+        "application/vnd.github+json",
+    ).decode())
+    published = data.get("published_at", "")
+    published_at = datetime.fromisoformat(published.replace("Z", "+00:00"))
+    if datetime.now(published_at.tzinfo) - published_at > timedelta(days=30):
+        return []
+    notes = clean(data.get("body", ""))[:500]
+    return [{
+        "source": "关注项目 · Scrapling",
+        "title": f"Scrapling {data.get('name') or data.get('tag_name') or '新版本'}",
+        "url": data.get("html_url") or "https://github.com/D4Vinci/Scrapling",
+        "summary": notes or "Scrapling 发布了新版本：它是一套能适应网页变化、支持动态页面和批量任务的网页采集工具。",
+        "score": 80,
+    }]
+
+
+def follow_builders():
+    """Read follow-builders' public central feeds without scraping X or YouTube."""
+    result, feed_errors = [], []
+    for kind, url in BUILDER_FEEDS.items():
+        try:
+            data = json.loads(fetch(url, "application/json").decode("utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError("Feed 根节点不是对象")
+            if kind == "X 动态":
+                groups = data.get("x", [])
+                if not isinstance(groups, list):
+                    raise ValueError("x 字段结构变化")
+                for group in groups:
+                    if not isinstance(group, dict):
+                        continue
+                    name = clean(group.get("name") or group.get("handle") or "AI Builder")
+                    for post in group.get("tweets", []) if isinstance(group.get("tweets"), list) else []:
+                        if not isinstance(post, dict):
+                            continue
+                        text = clean(post.get("text"))
+                        url_value = post.get("url")
+                        if len(text) < 45 or not url_value:
+                            continue
+                        engagement = sum(int(post.get(key) or 0) for key in ("likes", "retweets", "replies"))
+                        result.append({
+                            "source": "AI 人物与观点",
+                            "kind": kind,
+                            "title": name,
+                            "url": str(url_value),
+                            "summary": text,
+                            "created_at": post.get("createdAt", ""),
+                            "score": engagement,
+                        })
+            else:
+                key = "podcasts" if kind == "播客" else "blogs"
+                entries = data.get(key, [])
+                if not isinstance(entries, list):
+                    raise ValueError(f"{key} 字段结构变化")
+                for entry in entries:
+                    if not isinstance(entry, dict):
+                        continue
+                    title = clean(entry.get("title") or entry.get("episodeTitle") or entry.get("name"))
+                    name = clean(entry.get("podcast") or entry.get("show") or entry.get("source")
+                                 or entry.get("author") or entry.get("publisher") or kind)
+                    text = clean(entry.get("summary") or entry.get("description")
+                                 or entry.get("content") or entry.get("transcript"))
+                    url_value = entry.get("url") or entry.get("link") or entry.get("videoUrl")
+                    if title and url_value:
+                        result.append({
+                            "source": "AI 人物与观点",
+                            "kind": kind,
+                            "title": name,
+                            "url": str(url_value),
+                            "summary": f"{title}：{text}" if text else title,
+                            "created_at": entry.get("publishedAt") or entry.get("published")
+                                          or entry.get("date") or "",
+                            "score": 200,
+                        })
+            for error in data.get("errors", []) if isinstance(data.get("errors"), list) else []:
+                feed_errors.append(f"follow-builders {kind}: {clean(str(error))[:180]}")
+        except Exception as exc:
+            feed_errors.append(f"follow-builders {kind}: {type(exc).__name__}: {exc}")
+    if not result and len(feed_errors) == len(BUILDER_FEEDS):
+        raise RuntimeError("；".join(feed_errors))
+    return result, feed_errors
+
+
 def collect():
     items, errors = [], []
-    for name, loader in (("GitHub Trending", github_trending),
+    for name, loader in (("独立开发者新品", chinese_indie_apps),
+                         ("Scrapling 更新", scrapling_updates),
+                         ("GitHub Trending", github_trending),
                          ("Hacker News", hacker_news),
                          ("Product Hunt", product_hunt)):
         try:
             items.extend(loader())
         except Exception as exc:
             errors.append(f"{name}: {type(exc).__name__}: {exc}")
+    try:
+        builders, builder_errors = follow_builders()
+        items.extend(builders)
+        errors.extend(builder_errors)
+    except Exception as exc:
+        errors.append(f"follow-builders: {type(exc).__name__}: {exc}")
     if not items:
         raise RuntimeError("全部资讯源抓取失败：" + "；".join(errors))
     return items, errors
@@ -131,7 +289,68 @@ def collect():
 
 def rank(item):
     text = (item["title"] + " " + item["summary"]).lower()
-    return sum(word in text for word in AI_WORDS), item["score"]
+    app_bonus = sum(word in text for word in APP_WORDS)
+    source_bonus = 7 if item["source"] == "Product Hunt" else 0
+    technical_penalty = sum(word in text for word in
+                            ("framework", "library", "sdk", "api", "cli", "inference", "benchmark"))
+    return (sum(word in text for word in AI_WORDS),
+            app_bonus + source_bonus - technical_penalty * 3,
+            item["score"])
+
+
+def parse_time(value):
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return datetime.min.replace(tzinfo=ZoneInfo("UTC"))
+
+
+def select_builder_items(items, now):
+    candidates = [item for item in items if item["source"] == "AI 人物与观点"]
+    useful_words = AI_WORDS + ("product", "build", "startup", "codex", "claude",
+                               "openai", "anthropic", "tool", "workflow")
+    candidates = [
+        item for item in candidates
+        if any(word in (item["summary"] + " " + item["title"]).lower() for word in useful_words)
+        or item["kind"] in ("播客", "官方博客")
+    ]
+    candidates.sort(key=lambda item: (item["score"], len(item["summary"])), reverse=True)
+    is_afternoon = now.hour >= 16
+    morning_cutoff = now.replace(hour=11, minute=0, second=0, microsecond=0)
+    new_items, morning_items, seen = [], [], set()
+    for item in candidates:
+        if item["url"] in seen:
+            continue
+        seen.add(item["url"])
+        created = parse_time(item.get("created_at")).astimezone(ZoneInfo("Asia/Shanghai"))
+        item["morning_repeat"] = is_afternoon and created < morning_cutoff
+        (morning_items if item["morning_repeat"] else new_items).append(item)
+    return (new_items + morning_items)[:5]
+
+
+def builder_card(item):
+    said = translate_zh(item["summary"])
+    text = (item["summary"] + " " + item["title"]).lower()
+    if any(word in text for word in ("product", "build", "startup", "launch", "用户", "产品")):
+        why = "它反映了一线建设者如何把 AI 变成真实产品，而不是停留在概念讨论。"
+        impact = "普通用户可以发现新工具；产品经理和创业者可以参考需求、定位与发布方式。"
+    elif any(word in text for word in ("code", "codex", "developer", "agent", "workflow")):
+        why = "它来自正在实际构建 AI 工具的人，能帮助判断开发方式和工作流正在怎样变化。"
+        impact = "开发者可用于改进工具链；产品经理和创业者可据此评估 AI 自动化的实际边界。"
+    else:
+        why = "这条内容有明确观点或较高讨论度，能够补充产品新闻背后的行业判断。"
+        impact = "可以把它当作决策参考，而不是简单追逐热点。"
+    repeat = '<div style="margin-top:6px;color:#b45309;font-weight:600">上午已收录</div>' if item.get("morning_repeat") else ""
+    return (
+        '<div style="padding:15px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:10px 0">'
+        f'<div style="font-size:16px;font-weight:700">{html.escape(item["title"])} '
+        f'<span style="font-size:12px;color:#7c3aed">· {html.escape(item["kind"])}</span></div>'
+        f'<div style="margin-top:8px;line-height:1.65"><b>最近说了什么：</b>{html.escape(said[:700])}</div>'
+        f'<div style="margin-top:8px;line-height:1.65"><b>为什么值得关注：</b>{html.escape(why)}</div>'
+        f'<div style="margin-top:8px;line-height:1.65"><b>实际意义：</b>{html.escape(impact)}</div>'
+        f'{repeat}<div style="margin-top:9px"><a href="{html.escape(item["url"], quote=True)}" '
+        'style="color:#2563eb">查看原始内容 →</a></div></div>'
+    )
 
 
 def explain(item, featured=False):
@@ -145,7 +364,15 @@ def explain(item, featured=False):
             insight = candidate_insight
             audience = candidate_audience
             break
-    if not insight:
+    if item["source"] == "独立开发者新品":
+        topic = "可直接使用的新应用"
+        insight = "这是中国独立开发者近期新增或上线的产品，优先看它解决的具体问题，以及是否支持你的设备和使用场景。"
+        audience = "想发现实用新应用、效率工具和有趣产品的人"
+    elif item["source"] == "关注项目 · Scrapling":
+        topic = "网页采集工具更新"
+        insight = "Scrapling 用于抓取普通或动态网页，并尽量适应网页结构变化；这段内容说明它最近发布了什么新变化。"
+        audience = "需要监测网页、收集公开资料或为 AI 提供网页数据的开发者"
+    elif not insight:
         if item["source"] == "GitHub Trending":
             insight = "这是今天增长较快的开源项目。建议先看 README、最近提交和 Issue，再判断它是短期热度还是值得长期采用。"
         elif item["source"] == "Hacker News":
@@ -187,10 +414,15 @@ def card(item, number=None, featured=False):
 
 def render(items, errors):
     now = datetime.now(ZoneInfo("Asia/Shanghai"))
-    top10 = sorted(items, key=rank, reverse=True)[:10]
+    indie = [x for x in items if x["source"] == "独立开发者新品"]
+    builders = select_builder_items(items, now)
+    discovered = [x for x in items if x["source"] not in
+                  ("独立开发者新品", "AI 人物与观点")]
+    top10 = sorted(discovered, key=rank, reverse=True)[:10]
+    top_urls = {item["url"] for item in top10}
     all_sections = []
     for source in ("GitHub Trending", "Hacker News", "Product Hunt"):
-        subset = [x for x in items if x["source"] == source]
+        subset = [x for x in items if x["source"] == source and x["url"] not in top_urls]
         all_sections.append(f"<h2>{source}（{len(subset)}）</h2>")
         all_sections.extend(card(x) for x in subset)
     warning = ""
@@ -198,35 +430,49 @@ def render(items, errors):
         warning = '<p style="background:#fff7ed;padding:10px">部分来源获取失败：' + html.escape("；".join(errors)) + "</p>"
     body = f"""<!doctype html><html><body style="margin:0;background:#f3f4f6;font-family:Arial,'Microsoft YaHei',sans-serif">
 <div style="max-width:760px;margin:auto;background:white;padding:26px">
-<h1>TrendingAI 每日资讯</h1>
+<h1>每日 AI 日报</h1>
 <p style="color:#6b7280">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条</p>
-<p style="color:#475569;line-height:1.7">这不是一份只有链接的目录：每条资讯都附有简短导读，帮你判断它是什么、有什么看点，以及是否值得继续点开。</p>
+<p style="color:#475569;line-height:1.7">先看近期实用应用与重点关注项目，再看 AI 精选和技术社区资讯。每条内容都附有简短导读。</p>
 {warning}
+<div style="padding:18px;background:#f0fdf4;border-radius:10px;margin-bottom:18px">
+<h2 style="color:#166534">一、今日实用新应用</h2>
+<p style="color:#475569;line-height:1.6">来自 Chinese Independent Developer 主榜，优先展示普通用户可以直接使用的新应用。</p>
+{''.join(card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的主榜应用。</p>'}
+</div>
+<div style="padding:18px;background:#f5f3ff;border-radius:10px;margin-bottom:18px">
+<h2 style="color:#6d28d9">二、AI 人物与观点</h2>
+<p style="color:#475569;line-height:1.6">来自 follow-builders 的公开中央 Feed，精选 AI Builder 的 X 动态、播客与官方博客。英文内容自动转为通俗中文。</p>
+{''.join(builder_card(x) for x in builders) if builders else '<p>本次中央 Feed 暂无足够有信息量的新内容。</p>'}
+</div>
 <div style="padding:18px;background:#eff6ff;border-radius:10px">
-<h2 style="color:#1d4ed8">AI 精选 Top 10</h2>
-<p style="color:#475569;line-height:1.6">先读这 10 条：综合 AI 相关性与当天热度筛选，并说明每条的入选理由。</p>
+<h2 style="color:#1d4ed8">三、AI 精选 Top 10</h2>
+<p style="color:#475569;line-height:1.6">从原有资讯源中综合 AI 相关性、实用性与当天热度筛选，并说明每条的入选理由。</p>
 {''.join(card(x, i, True) for i, x in enumerate(top10, 1))}
 </div>
-<h1>全部资讯与导读</h1>{''.join(all_sections)}
-<p style="color:#9ca3af;font-size:12px">由 LeftSeineM/TrendingAI 自动整理。</p>
+<h1>四、更多技术资讯与导读</h1>{''.join(all_sections)}
+<p style="color:#9ca3af;font-size:12px">每日 AI 日报自动整理。</p>
 </div></body></html>"""
-    return f"TrendingAI｜有解读的 AI Top 10 + 全部资讯｜{now:%m月%d日 %H:%M}", body
+    return f"每日 AI 日报｜{now:%m月%d日 %H:%M}", body
 
 
 def main():
     sender = os.environ["QQ_EMAIL"].strip()
     auth_code = os.environ["QQ_SMTP_AUTH_CODE"].strip()
-    recipient = os.environ.get("DIGEST_RECIPIENT", sender).strip()
+    configured = os.environ.get("DIGEST_RECIPIENTS") or os.environ.get("DIGEST_RECIPIENT", "")
+    recipients = [address.strip() for address in configured.split(",") if address.strip()]
+    recipients.extend(DEFAULT_RECIPIENTS)
+    recipients = list(dict.fromkeys(recipients))
     items, errors = collect()
     subject, body = render(items, errors)
-    message = EmailMessage()
-    message["Subject"], message["From"], message["To"] = subject, sender, recipient
-    message.set_content("请使用支持 HTML 的邮件客户端查看 TrendingAI 每日资讯。")
-    message.add_alternative(body, subtype="html")
     with smtplib.SMTP_SSL("smtp.qq.com", 465, context=ssl.create_default_context(), timeout=30) as smtp:
         smtp.login(sender, auth_code)
-        smtp.send_message(message)
-    print(f"Sent {len(items)} items: {subject}")
+        for recipient in recipients:
+            message = EmailMessage()
+            message["Subject"], message["From"], message["To"] = subject, sender, recipient
+            message.set_content("请使用支持 HTML 的邮件客户端查看每日 AI 日报。")
+            message.add_alternative(body, subtype="html")
+            smtp.send_message(message)
+    print(f"Sent {len(items)} items to {len(recipients)} recipients: {subject}")
 
 
 if __name__ == "__main__":
