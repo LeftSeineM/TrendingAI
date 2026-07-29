@@ -27,4 +27,9 @@ jobs:
           QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
           QQ_SMTP_AUTH_CODE: ${{ secrets.QQ_SMTP_AUTH_CODE }}
           DIGEST_RECIPIENTS: ${{ vars.DIGEST_RECIPIENTS }}
+          # Optional AI editing layer. If any value is missing or the API fails,
+          # the script automatically falls back to deterministic editorial rules.
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ vars.AI_BASE_URL }}
+          AI_MODEL: ${{ vars.AI_MODEL }}
         run: python scripts/send_daily_digest.py
