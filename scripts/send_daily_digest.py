@@ -324,131 +324,254 @@ def select_builder_items(items, now):
         created = parse_time(item.get("created_at")).astimezone(ZoneInfo("Asia/Shanghai"))
         item["morning_repeat"] = is_afternoon and created < morning_cutoff
         (morning_items if item["morning_repeat"] else new_items).append(item)
-    return (new_items + morning_items)[:5]
+    return (new_items + morning_items)[:4]
+
+
+def item_tags(item):
+    if item.get("ai_tags"):
+        return item["ai_tags"]
+    text = (item["title"] + " " + item["summary"]).lower()
+    tags = []
+    rules = (
+        (("agent", "智能体", "automation", "workflow"), "Agent"),
+        (("robot", "robotics", "具身", "机器人"), "具身智能"),
+        (("llm", "大模型", "language model", "gpt", "claude"), "大模型"),
+        (("image", "video", "audio", "music", "图像", "视频", "音乐"), "内容创作"),
+        (("security", "privacy", "安全", "隐私"), "安全"),
+        (("startup", "founder", "创业", "融资"), "创业"),
+        (("research", "paper", "benchmark", "研究", "论文"), "研究"),
+        (("developer", "code", "api", "sdk", "cli", "开发"), "开发工具"),
+        (("productivity", "效率", "办公", "note"), "效率工具"),
+    )
+    for words, tag in rules:
+        if any(word in text for word in words):
+            tags.append(tag)
+    if item["source"] in ("独立开发者新品", "Product Hunt"):
+        tags.insert(0, "产品")
+    elif item["source"] in ("GitHub Trending", "关注项目 · Scrapling"):
+        tags.insert(0, "开源")
+    elif item["source"] == "Hacker News":
+        tags.insert(0, "科技新闻")
+    elif item["source"] == "AI 人物与观点":
+        tags.insert(0, "人物观点")
+    return list(dict.fromkeys(tags or ["AI"]))[:3]
+
+
+def tag_html(item):
+    return "".join(
+        f'<span style="display:inline-block;margin:0 5px 5px 0;padding:3px 8px;'
+        f'border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:12px">{html.escape(tag)}</span>'
+        for tag in item_tags(item)
+    )
+
+
+def back_to_toc():
+    return '<a href="#toc" style="font-size:12px;color:#64748b;text-decoration:none">↑ 返回目录</a>'
 
 
 def builder_card(item):
-    said = translate_zh(item["summary"])
+    said = item.get("ai_first_value") or translate_zh(item["summary"])[:700]
     text = (item["summary"] + " " + item["title"]).lower()
     if any(word in text for word in ("product", "build", "startup", "launch", "用户", "产品")):
-        why = "它反映了一线建设者如何把 AI 变成真实产品，而不是停留在概念讨论。"
-        impact = "普通用户可以发现新工具；产品经理和创业者可以参考需求、定位与发布方式。"
+        why = "AI 产品正在从概念进入真实用户和商业验证阶段，这条内容能帮助判断需求、定位或发布方式。"
     elif any(word in text for word in ("code", "codex", "developer", "agent", "workflow")):
-        why = "它来自正在实际构建 AI 工具的人，能帮助判断开发方式和工作流正在怎样变化。"
-        impact = "开发者可用于改进工具链；产品经理和创业者可据此评估 AI 自动化的实际边界。"
+        why = "开发工具和工作流正在快速变化，一线建设者的实际反馈比单纯的功能宣传更有参考价值。"
     else:
-        why = "这条内容有明确观点或较高讨论度，能够补充产品新闻背后的行业判断。"
-        impact = "可以把它当作决策参考，而不是简单追逐热点。"
+        why = "这条内容补充了产品新闻背后的行业判断，有助于区分短期热点与长期变化。"
     repeat = '<div style="margin-top:6px;color:#b45309;font-weight:600">上午已收录</div>' if item.get("morning_repeat") else ""
     return (
         '<div style="padding:15px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:10px 0">'
         f'<div style="font-size:16px;font-weight:700">{html.escape(item["title"])} '
         f'<span style="font-size:12px;color:#7c3aed">· {html.escape(item["kind"])}</span></div>'
-        f'<div style="margin-top:8px;line-height:1.65"><b>最近说了什么：</b>{html.escape(said[:700])}</div>'
-        f'<div style="margin-top:8px;line-height:1.65"><b>为什么值得关注：</b>{html.escape(why)}</div>'
-        f'<div style="margin-top:8px;line-height:1.65"><b>实际意义：</b>{html.escape(impact)}</div>'
+        f'<div style="margin-top:7px">{tag_html(item)}</div>'
+        f'<div style="margin-top:8px;line-height:1.65"><b>{html.escape(item.get("ai_first_label", "核心观点"))}：</b>{html.escape(said)}</div>'
+        f'<div style="margin-top:8px;line-height:1.65"><b>{html.escape(item.get("ai_second_label", "为什么现在值得注意"))}：</b>{html.escape(item.get("ai_second_value", why))}</div>'
         f'{repeat}<div style="margin-top:9px"><a href="{html.escape(item["url"], quote=True)}" '
         'style="color:#2563eb">查看原始内容 →</a></div></div>'
     )
 
 
-def explain(item, featured=False):
+def editorial_type(item):
     text = (item["title"] + " " + item["summary"]).lower()
-    topic = "新技术与产品"
-    insight = ""
-    audience = "喜欢发现新工具、关注技术趋势的人"
-    for words, candidate_topic, candidate_insight, candidate_audience in TOPICS:
-        if any(word in text for word in words):
-            topic = candidate_topic
-            insight = candidate_insight
-            audience = candidate_audience
-            break
-    if item["source"] == "独立开发者新品":
-        topic = "可直接使用的新应用"
-        insight = "这是中国独立开发者近期新增或上线的产品，优先看它解决的具体问题，以及是否支持你的设备和使用场景。"
-        audience = "想发现实用新应用、效率工具和有趣产品的人"
-    elif item["source"] == "关注项目 · Scrapling":
-        topic = "网页采集工具更新"
-        insight = "Scrapling 用于抓取普通或动态网页，并尽量适应网页结构变化；这段内容说明它最近发布了什么新变化。"
-        audience = "需要监测网页、收集公开资料或为 AI 提供网页数据的开发者"
-    elif not insight:
-        if item["source"] == "GitHub Trending":
-            insight = "这是今天增长较快的开源项目。建议先看 README、最近提交和 Issue，再判断它是短期热度还是值得长期采用。"
-        elif item["source"] == "Hacker News":
-            insight = "它正在技术社区引发讨论。除了文章本身，也值得打开评论区看看开发者提出的反例、质疑和补充资料。"
-        else:
-            insight = "这是近期发布的新产品。可以重点比较它解决的问题、目标用户，以及免费版是否足够实际使用。"
-    if item["score"]:
-        insight += f" 当前热度信号约为 {item['score']}，说明它已经获得一定关注。"
-    reason = ""
-    if featured:
-        hits = [word.upper() if len(word) <= 4 else word for word in AI_WORDS if word in text]
-        if hits:
-            reason = "内容与 " + "、".join(hits[:3]) + " 直接相关，同时在当天榜单中有较高热度。"
-        else:
-            reason = "在当天资讯中热度和讨论度较高，适合优先快速了解。"
-    return topic, insight, audience, reason
+    if item["source"] in ("独立开发者新品", "Product Hunt"):
+        return "product"
+    if item["source"] in ("GitHub Trending", "关注项目 · Scrapling"):
+        return "open_source"
+    if any(word in text for word in ("research", "paper", "model", "benchmark", "研究", "论文", "模型")):
+        return "research"
+    return "news"
 
 
-def card(item, number=None, featured=False):
+def editorial_fields(item):
+    if all(item.get(f"ai_{key}") for key in ("first_label", "first_value", "second_label", "second_value")):
+        return ("AI 编辑", item["ai_first_label"], item["ai_first_value"],
+                item["ai_second_label"], item["ai_second_value"])
+    kind = editorial_type(item)
+    summary = translate_zh(item["summary"][:650] or "原始来源暂未提供简介，建议打开链接查看完整说明。")
+    text = (item["title"] + " " + item["summary"]).lower()
+    if kind == "product":
+        if any(word in text for word in ("cli", "api", "sdk", "python", "framework", "部署")):
+            threshold = "需要安装、配置或一定技术基础，建议先看文档和演示。"
+        elif any(word in text for word in ("web", "browser", "online", "网页", "在线")):
+            threshold = "通常打开网页即可体验，使用门槛较低；付费与地区限制需以产品页为准。"
+        else:
+            threshold = "先查看支持的平台、免费额度和是否需要注册，再决定是否安装或付费。"
+        return "产品", "能干什么", summary, "使用门槛", threshold
+    if kind == "open_source":
+        trial = ("适合开发者试用；普通用户如果没有部署或二次开发需求，可以先收藏观察。"
+                 if any(word in text for word in ("cli", "api", "sdk", "python", "framework", "library"))
+                 else "如果有在线演示或安装包，可以直接试用；否则先看 README、更新频率和 Issue。")
+        return "开源项目", "解决什么问题", summary, "是否值得尝试", trial
+    if kind == "research":
+        impact = ("短期内主要影响开发者和产品能力，普通用户会逐步在搜索、创作或智能助手中感受到变化。"
+                  if not any(word in text for word in ("cost", "price", "cheap", "local", "成本", "本地"))
+                  else "更低成本或本地运行会让普通用户更容易获得相关能力，也可能带来新的隐私与选择空间。")
+        return "研究 / 模型", "能力变化", summary, "普通人会受到什么影响", impact
+    if any(word in text for word in ("security", "privacy", "regulation", "安全", "隐私", "监管")):
+        impact = "它可能改变产品的合规、安全边界或用户数据处理方式，值得关注后续政策与实际执行。"
+    elif any(word in text for word in ("launch", "release", "model", "product", "发布", "推出")):
+        impact = "它可能改变现有产品竞争、价格或可用能力，但仍需等待真实体验和后续反馈。"
+    else:
+        impact = "目前更像一个行业信号，是否产生长期影响要看后续采用、成本和用户反馈。"
+    return "新闻", "发生了什么", summary, "有何影响", impact
+
+
+def editorial_card(item, number=None):
     prefix = f"{number}. " if number else ""
-    topic, insight, audience, reason = explain(item, featured)
-    reason_html = (
-        f'<div style="margin-top:8px;color:#1d4ed8;font-weight:600">✨ 入选理由：{html.escape(reason)}</div>'
-        if reason else ""
-    )
+    kind, first_label, first_value, second_label, second_value = editorial_fields(item)
     return (
-        '<div style="padding:16px 0;border-bottom:1px solid #e5e7eb">'
+        '<div style="padding:15px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:10px 0">'
         f'<div style="font-size:16px;font-weight:700">{prefix}<a style="color:#2563eb;text-decoration:none" '
         f'href="{html.escape(item["url"], quote=True)}">{html.escape(item["title"])}</a></div>'
-        f'<div style="margin-top:5px;color:#6b7280;font-size:12px">{html.escape(item["source"])} · {html.escape(topic)}</div>'
-        f'<div style="margin-top:8px;color:#374151;line-height:1.6"><b>它是什么：</b>'
-        f'{html.escape(item["summary"][:420] or "原始来源暂未提供简介，建议打开链接查看项目演示与说明。")}</div>'
-        f'<div style="margin-top:8px;color:#374151;line-height:1.6"><b>为什么值得看：</b>{html.escape(insight)}</div>'
-        f'<div style="margin-top:8px;color:#374151;line-height:1.6"><b>适合谁：</b>{html.escape(audience)}</div>'
-        f'{reason_html}'
+        f'<div style="margin-top:5px;color:#6b7280;font-size:12px">{html.escape(item["source"])} · {kind}</div>'
+        f'<div style="margin-top:7px">{tag_html(item)}</div>'
+        f'<div style="margin-top:7px;color:#374151;line-height:1.65"><b>{first_label}：</b>{html.escape(first_value)}</div>'
+        f'<div style="margin-top:7px;color:#374151;line-height:1.65"><b>{second_label}：</b>{html.escape(second_value)}</div>'
         "</div>"
     )
 
 
+def compact_link(item):
+    return (
+        '<div style="padding:10px 0;border-bottom:1px solid #e5e7eb;line-height:1.5">'
+        f'{tag_html(item)}<br><a href="{html.escape(item["url"], quote=True)}" '
+        f'style="color:#2563eb;text-decoration:none">{html.escape(item["title"])}</a></div>'
+    )
+
+
+def ai_enrich(items):
+    """Optionally edit selected items with an OpenAI-compatible chat API."""
+    api_key = os.environ.get("AI_API_KEY", "").strip()
+    base_url = os.environ.get("AI_BASE_URL", "").strip().rstrip("/")
+    model = os.environ.get("AI_MODEL", "").strip()
+    if not (api_key and base_url and model and items):
+        return
+    payload_items = [{
+        "id": index,
+        "source": item["source"],
+        "title": item["title"],
+        "summary": item["summary"][:900],
+        "kind": item.get("kind", ""),
+    } for index, item in enumerate(items)]
+    prompt = """你是每日 AI 日报的中文编辑。只根据输入内容编辑，不补充无法核验的事实。
+为每条内容返回：
+1. tags：1～3 个明确短 Tag；
+2. first_label、first_value；
+3. second_label、second_value。
+产品使用“能干什么 / 使用门槛”；新闻使用“发生了什么 / 有何影响”；
+人物观点使用“核心观点 / 为什么现在值得注意”；开源项目使用“解决什么问题 / 是否值得尝试”；
+研究或模型使用“能力变化 / 普通人会受到什么影响”。
+语言自然、具体、简短，英文信息翻译为中文。只返回 {"items": [...]} JSON 对象，每项保留输入 id。输入如下：
+""" + json.dumps(payload_items, ensure_ascii=False)
+    request_body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+        "response_format": {"type": "json_object"},
+    }, ensure_ascii=False).encode("utf-8")
+    request = urllib.request.Request(
+        f"{base_url}/chat/completions",
+        data=request_body,
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=45) as response:
+            result = json.loads(response.read().decode("utf-8"))
+        content = result["choices"][0]["message"]["content"]
+        parsed = json.loads(content)
+        rows = parsed.get("items", parsed) if isinstance(parsed, dict) else parsed
+        if not isinstance(rows, list):
+            return
+        for row in rows:
+            index = row.get("id") if isinstance(row, dict) else None
+            if not isinstance(index, int) or not 0 <= index < len(items):
+                continue
+            tags = row.get("tags")
+            if isinstance(tags, list):
+                items[index]["ai_tags"] = [clean(str(tag))[:16] for tag in tags[:3] if clean(str(tag))]
+            for key in ("first_label", "first_value", "second_label", "second_value"):
+                value = clean(str(row.get(key, "")))
+                if value:
+                    items[index][f"ai_{key}"] = value[:700]
+    except Exception:
+        # AI editing is optional. Any API/configuration/format failure falls back
+        # to deterministic editorial rules so the scheduled email still sends.
+        return
+
+
 def render(items, errors):
     now = datetime.now(ZoneInfo("Asia/Shanghai"))
-    indie = [x for x in items if x["source"] == "独立开发者新品"]
+    indie = [x for x in items if x["source"] == "独立开发者新品"][:4]
     builders = select_builder_items(items, now)
     discovered = [x for x in items if x["source"] not in
                   ("独立开发者新品", "AI 人物与观点")]
     top10 = sorted(discovered, key=rank, reverse=True)[:10]
+    ai_enrich(indie + builders + top10)
     top_urls = {item["url"] for item in top10}
     all_sections = []
     for source in ("GitHub Trending", "Hacker News", "Product Hunt"):
         subset = [x for x in items if x["source"] == source and x["url"] not in top_urls]
         all_sections.append(f"<h2>{source}（{len(subset)}）</h2>")
-        all_sections.extend(card(x) for x in subset)
-    warning = ""
+        all_sections.extend(compact_link(x) for x in subset[:10])
+    warning = '<p style="color:#64748b">本次所有来源均正常。</p>'
     if errors:
-        warning = '<p style="background:#fff7ed;padding:10px">部分来源获取失败：' + html.escape("；".join(errors)) + "</p>"
+        warning = '<p style="background:#fff7ed;padding:10px">部分来源暂时不可用：' + html.escape("；".join(errors)) + "</p>"
     body = f"""<!doctype html><html><body style="margin:0;background:#f3f4f6;font-family:Arial,'Microsoft YaHei',sans-serif">
 <div style="max-width:760px;margin:auto;background:white;padding:26px">
-<h1>每日 AI 日报</h1>
+<a id="top" name="top"></a><h1>每日 AI 日报</h1>
 <p style="color:#6b7280">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条</p>
-<p style="color:#475569;line-height:1.7">先看近期实用应用与重点关注项目，再看 AI 精选和技术社区资讯。每条内容都附有简短导读。</p>
-{warning}
+<p style="color:#475569;line-height:1.7">这是一份编辑型日报：不同类型的内容采用不同的导读方式，前三个模块最多 18 条，方便快速读完。</p>
+<div id="toc" style="padding:15px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin:16px 0">
+<b>目录</b>
+<div style="margin-top:9px;line-height:2">
+<a href="#apps" style="color:#2563eb">一、今日实用新应用</a><br>
+<a href="#voices" style="color:#2563eb">二、AI 人物与观点</a><br>
+<a href="#top10" style="color:#2563eb">三、AI 精选 Top 10</a><br>
+<a href="#more" style="color:#2563eb">四、更多资讯</a>
+</div></div>
+<a id="apps" name="apps"></a>
 <div style="padding:18px;background:#f0fdf4;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#166534">一、今日实用新应用</h2>
-<p style="color:#475569;line-height:1.6">来自 Chinese Independent Developer 主榜，优先展示普通用户可以直接使用的新应用。</p>
-{''.join(card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的主榜应用。</p>'}
+<h2 style="color:#166534">一、今日实用新应用</h2>{back_to_toc()}
+<p style="color:#475569;line-height:1.6">关注能直接使用的产品，重点说明它能干什么、上手是否麻烦。</p>
+{''.join(editorial_card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的主榜应用。</p>'}
 </div>
+<a id="voices" name="voices"></a>
 <div style="padding:18px;background:#f5f3ff;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#6d28d9">二、AI 人物与观点</h2>
-<p style="color:#475569;line-height:1.6">来自 follow-builders 的公开中央 Feed，精选 AI Builder 的 X 动态、播客与官方博客。英文内容自动转为通俗中文。</p>
+<h2 style="color:#6d28d9">二、AI 人物与观点</h2>{back_to_toc()}
+<p style="color:#475569;line-height:1.6">从公开中央 Feed 中精选 3～4 条有明确观点的内容，并解释为什么此刻值得注意。</p>
 {''.join(builder_card(x) for x in builders) if builders else '<p>本次中央 Feed 暂无足够有信息量的新内容。</p>'}
 </div>
+<a id="top10" name="top10"></a>
 <div style="padding:18px;background:#eff6ff;border-radius:10px">
-<h2 style="color:#1d4ed8">三、AI 精选 Top 10</h2>
-<p style="color:#475569;line-height:1.6">从原有资讯源中综合 AI 相关性、实用性与当天热度筛选，并说明每条的入选理由。</p>
-{''.join(card(x, i, True) for i, x in enumerate(top10, 1))}
+<h2 style="color:#1d4ed8">三、AI 精选 Top 10</h2>{back_to_toc()}
+<p style="color:#475569;line-height:1.6">按产品、新闻、开源项目、研究或模型分别编辑，不再强行套用同一套说明。</p>
+{''.join(editorial_card(x, i) for i, x in enumerate(top10, 1))}
 </div>
-<h1>四、更多技术资讯与导读</h1>{''.join(all_sections)}
+<a id="more" name="more"></a><h1>四、更多资讯</h1>{back_to_toc()}
+<p style="color:#64748b">这里只保留标题、Tag 和原始链接，供需要时继续阅读。</p>
+{''.join(all_sections)}
+<h2 style="margin-top:24px">来源状态</h2>{warning}
 <p style="color:#9ca3af;font-size:12px">每日 AI 日报自动整理。</p>
 </div></body></html>"""
     return f"每日 AI 日报｜{now:%m月%d日 %H:%M}", body
