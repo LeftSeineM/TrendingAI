@@ -2,6 +2,7 @@
 """Send an editorial TrendingAI digest with GitHub, HN and Product Hunt items."""
 
 import html
+import hashlib
 import json
 import os
 import re
@@ -12,6 +13,9 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from email.message import EmailMessage
+from email.utils import parsedate_to_datetime
+from difflib import SequenceMatcher
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 UA = "Mozilla/5.0 (compatible; TrendingAI-Digest/2.0)"
@@ -26,6 +30,21 @@ BUILDER_FEEDS = {
     "播客": "https://raw.githubusercontent.com/zarazhangrui/follow-builders/main/feed-podcasts.json",
     "官方博客": "https://raw.githubusercontent.com/zarazhangrui/follow-builders/main/feed-blogs.json",
 }
+
+EDITORIAL_FEEDS = {
+    "OpenAI 官方": ("https://openai.com/news/rss.xml", "官方", 100),
+    "Hugging Face 官方": ("https://huggingface.co/blog/feed.xml", "官方", 96),
+    "智谱官方": ("https://wechat2rss.bestblogs.dev/feed/433d2134dca54d80804daf32e8be546155be3300.xml", "官方", 94),
+    "Kimi 官方": ("https://wechat2rss.bestblogs.dev/feed/c5c43d4bc17bae656763859ed0903bb6314ec6fe.xml", "官方", 94),
+    "通义官方": ("https://wechat2rss.bestblogs.dev/feed/4ebee6222ae08705b8aabc9116f0defbcb6b17c6.xml", "官方", 92),
+    "腾讯混元官方": ("https://wechat2rss.bestblogs.dev/feed/306ce19a1ca590c9c2df781789e828d1acfa1356.xml", "官方", 92),
+    "机器之心": ("https://wechat2rss.bestblogs.dev/feed/8d97af31b0de9e48da74558af128a4673d78c9a3.xml", "专业媒体", 90),
+    "新智元": ("https://wechat2rss.bestblogs.dev/feed/e531a18b21c34cf787b83ab444eef659d7a980de.xml", "专业媒体", 86),
+    "智东西": ("https://wechat2rss.bestblogs.dev/feed/cfd52b4245ca611b2fda4ef934832c689028927.xml", "专业媒体", 84),
+    "数字生命卡兹克": ("https://wechat2rss.bestblogs.dev/feed/ff621c3e98d6ae6fceb3397e57441ffc6ea3c17f.xml", "个人作者", 88),
+    "Simon Willison": ("https://simonwillison.net/tags/ai.atom", "个人作者", 88),
+}
+HISTORY_PATH = Path(__file__).resolve().parent.parent / "data" / "sent_history.json"
 
 TOPICS = (
     (("agent", "copilot", "automation", "workflow", "智能体"),
@@ -91,6 +110,135 @@ def translate_zh(text):
         return clean(translated) or text
     except Exception:
         return text
+
+
+def parse_feed_time(value):
+    if not value:
+        return None
+    try:
+        parsed = parsedate_to_datetime(value)
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=ZoneInfo("UTC"))
+    except (TypeError, ValueError):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return None
+
+
+def editorial_feeds():
+    """Collect a 14-day pool from official, edited-media and trusted-author feeds."""
+    now = datetime.now(ZoneInfo("UTC"))
+    result, errors = [], []
+    for source, (url, source_class, authority) in EDITORIAL_FEEDS.items():
+        try:
+            root = ET.fromstring(fetch(url, "application/rss+xml,application/atom+xml,text/xml"))
+            entries = [node for node in root.iter() if node.tag.rsplit("}", 1)[-1] in ("item", "entry")]
+            for entry in entries[:20]:
+                fields = {}
+                links = []
+                for child in entry.iter():
+                    key = child.tag.rsplit("}", 1)[-1]
+                    if key == "link":
+                        links.append(child.attrib.get("href") or (child.text or ""))
+                    elif key not in fields and child.text:
+                        fields[key] = child.text
+                title = clean(fields.get("title", ""))
+                url_value = next((clean(link) for link in links if clean(link).startswith("http")), "")
+                summary = clean(fields.get("description") or fields.get("summary")
+                                or fields.get("content") or fields.get("encoded") or "")
+                published = fields.get("pubDate") or fields.get("published") or fields.get("updated") or ""
+                published_at = parse_feed_time(published)
+                if not title or not url_value:
+                    continue
+                if published_at and now - published_at.astimezone(ZoneInfo("UTC")) > timedelta(days=14):
+                    continue
+                result.append({
+                    "source": source,
+                    "source_class": source_class,
+                    "title": title,
+                    "url": url_value,
+                    "summary": summary[:1200] or "原始来源未提供摘要，请打开原文查看。",
+                    "score": authority,
+                    "created_at": published,
+                })
+        except Exception as exc:
+            errors.append(f"{source}: {type(exc).__name__}: {exc}")
+    return result, errors
+
+
+def normalized_title(title):
+    text = re.sub(r"https?://\S+|[\W_]+", "", title.lower())
+    for word in ("重磅", "突发", "最新", "官宣", "发布", "正式", "深度", "独家"):
+        text = text.replace(word, "")
+    return text[:160]
+
+
+def canonical_url(url):
+    return re.sub(r"[?#].*$", "", url.strip()).rstrip("/")
+
+
+def deduplicate(items):
+    """Prefer authoritative sources when URLs or story titles describe the same event."""
+    ordered = sorted(items, key=lambda item: (
+        item.get("score", 0),
+        1 if item.get("source_class") == "官方" else 0,
+        len(item.get("summary", "")),
+    ), reverse=True)
+    result, seen_urls, seen_titles = [], set(), []
+    for item in ordered:
+        url_key = canonical_url(item["url"])
+        title_key = normalized_title(item["title"])
+        if not title_key or url_key in seen_urls:
+            continue
+        if any(SequenceMatcher(None, title_key, old).ratio() >= 0.78 for old in seen_titles):
+            continue
+        seen_urls.add(url_key)
+        seen_titles.append(title_key)
+        result.append(item)
+    return result
+
+
+def load_history():
+    try:
+        data = json.loads(HISTORY_PATH.read_text(encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def filter_history(items, history=None):
+    history = history if history is not None else load_history()
+    cutoff = datetime.now(ZoneInfo("UTC")) - timedelta(days=30)
+    active = []
+    for row in history:
+        sent_at = parse_feed_time(row.get("sent_at", ""))
+        if sent_at and sent_at.astimezone(ZoneInfo("UTC")) >= cutoff:
+            active.append(row)
+    seen_urls = {row.get("url_hash") for row in active}
+    seen_titles = [row.get("title_key", "") for row in active if row.get("title_key")]
+    fresh = []
+    for item in deduplicate(items):
+        url_hash = hashlib.sha256(canonical_url(item["url"]).encode()).hexdigest()[:20]
+        title_key = normalized_title(item["title"])
+        if url_hash in seen_urls:
+            continue
+        if any(SequenceMatcher(None, title_key, old).ratio() >= 0.84 for old in seen_titles):
+            continue
+        item["url_hash"] = url_hash
+        item["title_key"] = title_key
+        fresh.append(item)
+    return fresh, active
+
+
+def save_history(sent_items, history):
+    now = datetime.now(ZoneInfo("UTC")).isoformat()
+    rows = history + [{
+        "url_hash": item["url_hash"],
+        "title_key": item["title_key"],
+        "sent_at": now,
+    } for item in sent_items if item.get("url_hash")]
+    HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    HISTORY_PATH.write_text(json.dumps(rows[-600:], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def github_trending():
@@ -266,6 +414,9 @@ def follow_builders():
 
 def collect():
     items, errors = [], []
+    editorial, editorial_errors = editorial_feeds()
+    items.extend(editorial)
+    errors.extend(editorial_errors)
     for name, loader in (("独立开发者新品", chinese_indie_apps),
                          ("Scrapling 更新", scrapling_updates),
                          ("GitHub Trending", github_trending),
@@ -308,11 +459,17 @@ def select_builder_items(items, now):
     candidates = [item for item in items if item["source"] == "AI 人物与观点"]
     useful_words = AI_WORDS + ("product", "build", "startup", "codex", "claude",
                                "openai", "anthropic", "tool", "workflow")
-    candidates = [
-        item for item in candidates
-        if any(word in (item["summary"] + " " + item["title"]).lower() for word in useful_words)
-        or item["kind"] in ("播客", "官方博客")
-    ]
+    candidates = [item for item in candidates if (
+        item["kind"] in ("播客", "官方博客")
+        or (
+            len(item["summary"]) >= 120
+            and any(
+                re.search(r"\bai\b", (item["summary"] + " " + item["title"]).lower())
+                if word == "ai" else word in (item["summary"] + " " + item["title"]).lower()
+                for word in useful_words
+            )
+        )
+    )]
     candidates.sort(key=lambda item: (item["score"], len(item["summary"])), reverse=True)
     is_afternoon = now.hour >= 16
     morning_cutoff = now.replace(hour=11, minute=0, second=0, microsecond=0)
@@ -346,6 +503,8 @@ def item_tags(item):
     for words, tag in rules:
         if any(word in text for word in words):
             tags.append(tag)
+    if item.get("source_class"):
+        tags.insert(0, item["source_class"])
     if item["source"] in ("独立开发者新品", "Product Hunt"):
         tags.insert(0, "产品")
     elif item["source"] in ("GitHub Trending", "关注项目 · Scrapling"):
@@ -452,10 +611,12 @@ def editorial_card(item, number=None):
 
 
 def compact_link(item):
+    summary = item.get("ai_first_value") or translate_zh(item.get("summary", ""))[:160]
     return (
         '<div style="padding:10px 0;border-bottom:1px solid #e5e7eb;line-height:1.5">'
         f'{tag_html(item)}<br><a href="{html.escape(item["url"], quote=True)}" '
-        f'style="color:#2563eb;text-decoration:none">{html.escape(item["title"])}</a></div>'
+        f'style="color:#2563eb;text-decoration:none;font-weight:600">{html.escape(item["title"])}</a>'
+        f'<div style="margin-top:5px;color:#475569">{html.escape(summary)}</div></div>'
     )
 
 
@@ -481,13 +642,13 @@ def ai_enrich(items):
 产品使用“能干什么 / 使用门槛”；新闻使用“发生了什么 / 有何影响”；
 人物观点使用“核心观点 / 为什么现在值得注意”；开源项目使用“解决什么问题 / 是否值得尝试”；
 研究或模型使用“能力变化 / 普通人会受到什么影响”。
+写法接近专业科技媒体简报：先讲清事实，再给必要背景和判断，避免宣传腔、空话和机械套模板。
 语言自然、具体、简短，英文信息翻译为中文。只返回 {"items": [...]} JSON 对象，每项保留输入 id。输入如下：
 """ + json.dumps(payload_items, ensure_ascii=False)
     request_body = json.dumps({
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.2,
-        "response_format": {"type": "json_object"},
     }, ensure_ascii=False).encode("utf-8")
     request = urllib.request.Request(
         f"{base_url}/chat/completions",
@@ -499,6 +660,7 @@ def ai_enrich(items):
         with urllib.request.urlopen(request, timeout=45) as response:
             result = json.loads(response.read().decode("utf-8"))
         content = result["choices"][0]["message"]["content"]
+        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.I)
         parsed = json.loads(content)
         rows = parsed.get("items", parsed) if isinstance(parsed, dict) else parsed
         if not isinstance(rows, list):
@@ -522,18 +684,41 @@ def ai_enrich(items):
 
 def render(items, errors):
     now = datetime.now(ZoneInfo("Asia/Shanghai"))
+    authority = [x for x in items if x.get("source_class") in ("官方", "专业媒体", "个人作者")]
+    authority.sort(key=lambda x: (x.get("score", 0), parse_time(x.get("created_at"))), reverse=True)
+    highlights, source_counts = [], {}
+    for item in authority:
+        if source_counts.get(item["source"], 0) >= 1:
+            continue
+        highlights.append(item)
+        source_counts[item["source"]] = source_counts.get(item["source"], 0) + 1
+        if len(highlights) == 4:
+            break
+    if len(highlights) < 4:
+        highlights += [x for x in authority if x not in highlights][:4 - len(highlights)]
+    highlight_urls = {x["url"] for x in highlights}
+    authoritative_more, source_counts = [], {}
+    for item in authority:
+        if item["url"] in highlight_urls or source_counts.get(item["source"], 0) >= 2:
+            continue
+        authoritative_more.append(item)
+        source_counts[item["source"]] = source_counts.get(item["source"], 0) + 1
+        if len(authoritative_more) == 5:
+            break
+    used_urls = highlight_urls | {x["url"] for x in authoritative_more}
     indie = [x for x in items if x["source"] == "独立开发者新品"][:4]
-    builders = select_builder_items(items, now)
-    discovered = [x for x in items if x["source"] not in
-                  ("独立开发者新品", "AI 人物与观点")]
-    top10 = sorted(discovered, key=rank, reverse=True)[:10]
-    ai_enrich(indie + builders + top10)
-    top_urls = {item["url"] for item in top10}
-    all_sections = []
-    for source in ("GitHub Trending", "Hacker News", "Product Hunt"):
-        subset = [x for x in items if x["source"] == source and x["url"] not in top_urls]
-        all_sections.append(f"<h2>{source}（{len(subset)}）</h2>")
-        all_sections.extend(compact_link(x) for x in subset[:10])
+    used_urls |= {x["url"] for x in indie}
+    builders = [x for x in select_builder_items(items, now) if x["url"] not in used_urls][:3]
+    used_urls |= {x["url"] for x in builders}
+    discovered = [x for x in items if x["url"] not in used_urls and not x.get("source_class")
+                  and x["source"] not in ("独立开发者新品", "AI 人物与观点")]
+    tech = sorted(discovered, key=rank, reverse=True)[:4]
+    used_urls |= {x["url"] for x in tech}
+    more = sorted([x for x in items if x["url"] not in used_urls and
+                   (x["source"] != "AI 人物与观点" or len(x.get("summary", "")) >= 120)],
+                  key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:8]
+    selected = highlights + authoritative_more + indie + builders + tech
+    ai_enrich(selected + more)
     warning = '<p style="color:#64748b">本次所有来源均正常。</p>'
     if errors:
         warning = '<p style="background:#fff7ed;padding:10px">部分来源暂时不可用：' + html.escape("；".join(errors)) + "</p>"
@@ -541,36 +726,49 @@ def render(items, errors):
 <div style="max-width:760px;margin:auto;background:white;padding:26px">
 <a id="top" name="top"></a><h1>每日 AI 日报</h1>
 <p style="color:#6b7280">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条</p>
-<p style="color:#475569;line-height:1.7">这是一份编辑型日报：不同类型的内容采用不同的导读方式，前三个模块最多 18 条，方便快速读完。</p>
+<p style="color:#475569;line-height:1.7">从最近 14 天的官方发布、专业媒体、优质作者和实时榜单中筛选，并与近 30 天发送记录去重。</p>
 <div id="toc" style="padding:15px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin:16px 0">
 <b>目录</b>
 <div style="margin-top:9px;line-height:2">
-<a href="#apps" style="color:#2563eb">一、今日实用新应用</a><br>
-<a href="#voices" style="color:#2563eb">二、AI 人物与观点</a><br>
-<a href="#top10" style="color:#2563eb">三、AI 精选 Top 10</a><br>
-<a href="#more" style="color:#2563eb">四、更多资讯</a>
+<a href="#highlights" style="color:#2563eb">一、本期看点</a><br>
+<a href="#authority" style="color:#2563eb">二、权威资讯与行业变化</a><br>
+<a href="#apps" style="color:#2563eb">三、实用产品与应用</a><br>
+<a href="#voices" style="color:#2563eb">四、人物与观点</a><br>
+<a href="#tech" style="color:#2563eb">五、开源、模型与研究</a><br>
+<a href="#more" style="color:#2563eb">六、更多资讯</a>
 </div></div>
+<a id="highlights" name="highlights"></a>
+<div style="padding:18px;background:#fff7ed;border-radius:10px;margin-bottom:18px">
+<h2 style="color:#9a3412">一、本期看点</h2>{back_to_toc()}
+<p style="color:#475569;line-height:1.6">优先采用官方原文和专业编辑来源，把同一事件合并后讲清楚。</p>
+{''.join(editorial_card(x, i) for i, x in enumerate(highlights, 1)) if highlights else '<p>本期暂未发现足够重要的新内容。</p>'}
+</div>
+<a id="authority" name="authority"></a>
+<div style="padding:18px;background:#f8fafc;border-radius:10px;margin-bottom:18px">
+<h2 style="color:#334155">二、权威资讯与行业变化</h2>{back_to_toc()}
+{''.join(editorial_card(x, i) for i, x in enumerate(authoritative_more, 1)) if authoritative_more else '<p>本期暂无补充。</p>'}
+</div>
 <a id="apps" name="apps"></a>
 <div style="padding:18px;background:#f0fdf4;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#166534">一、今日实用新应用</h2>{back_to_toc()}
+<h2 style="color:#166534">三、实用产品与应用</h2>{back_to_toc()}
 <p style="color:#475569;line-height:1.6">关注能直接使用的产品，重点说明它能干什么、上手是否麻烦。</p>
 {''.join(editorial_card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的主榜应用。</p>'}
 </div>
 <a id="voices" name="voices"></a>
 <div style="padding:18px;background:#f5f3ff;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#6d28d9">二、AI 人物与观点</h2>{back_to_toc()}
-<p style="color:#475569;line-height:1.6">从公开中央 Feed 中精选 3～4 条有明确观点的内容，并解释为什么此刻值得注意。</p>
+<h2 style="color:#6d28d9">四、人物与观点</h2>{back_to_toc()}
+<p style="color:#475569;line-height:1.6">只保留有完整论点、实际经验或明确判断的内容。</p>
 {''.join(builder_card(x) for x in builders) if builders else '<p>本次中央 Feed 暂无足够有信息量的新内容。</p>'}
 </div>
-<a id="top10" name="top10"></a>
+<a id="tech" name="tech"></a>
 <div style="padding:18px;background:#eff6ff;border-radius:10px">
-<h2 style="color:#1d4ed8">三、AI 精选 Top 10</h2>{back_to_toc()}
-<p style="color:#475569;line-height:1.6">按产品、新闻、开源项目、研究或模型分别编辑，不再强行套用同一套说明。</p>
-{''.join(editorial_card(x, i) for i, x in enumerate(top10, 1))}
+<h2 style="color:#1d4ed8">五、开源、模型与研究</h2>{back_to_toc()}
+<p style="color:#475569;line-height:1.6">榜单只负责发现线索，优先保留真正解决问题或带来能力变化的项目。</p>
+{''.join(editorial_card(x, i) for i, x in enumerate(tech, 1))}
 </div>
-<a id="more" name="more"></a><h1>四、更多资讯</h1>{back_to_toc()}
-<p style="color:#64748b">这里只保留标题、Tag 和原始链接，供需要时继续阅读。</p>
-{''.join(all_sections)}
+<a id="more" name="more"></a><h1>六、更多资讯</h1>{back_to_toc()}
+<p style="color:#64748b">每条保留一句话摘要，不再只列标题。</p>
+{''.join(compact_link(x) for x in more)}
 <h2 style="margin-top:24px">来源状态</h2>{warning}
 <p style="color:#9ca3af;font-size:12px">每日 AI 日报自动整理。</p>
 </div></body></html>"""
@@ -584,6 +782,7 @@ def main():
     recipients = [address.strip() for address in configured.split(",") if address.strip()]
     recipients = list(dict.fromkeys(recipients))
     items, errors = collect()
+    items, history = filter_history(items)
     subject, body = render(items, errors)
     with smtplib.SMTP_SSL("smtp.qq.com", 465, context=ssl.create_default_context(), timeout=30) as smtp:
         smtp.login(sender, auth_code)
@@ -593,6 +792,7 @@ def main():
             message.set_content("请使用支持 HTML 的邮件客户端查看每日 AI 日报。")
             message.add_alternative(body, subtype="html")
             smtp.send_message(message)
+    save_history(items, history)
     print(f"Sent {len(items)} items to {len(recipients)} recipients: {subject}")
 
 
