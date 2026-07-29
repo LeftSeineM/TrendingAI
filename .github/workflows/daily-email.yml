@@ -1,0 +1,30 @@
+name: TrendingAI Daily Email
+
+on:
+  schedule:
+    # GitHub Actions uses UTC. 03:00/09:00 UTC = 11:00/17:00 Asia/Shanghai.
+    - cron: "0 3,9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trendingai-daily-email
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch news and send QQ email
+        env:
+          QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
+          QQ_SMTP_AUTH_CODE: ${{ secrets.QQ_SMTP_AUTH_CODE }}
+          DIGEST_RECIPIENT: 348897402@qq.com
+        run: python scripts/send_daily_digest.py
