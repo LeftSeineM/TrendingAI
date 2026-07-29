@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: trendingai-daily-email
@@ -33,3 +33,10 @@ jobs:
           AI_BASE_URL: ${{ vars.AI_BASE_URL }}
           AI_MODEL: ${{ vars.AI_MODEL }}
         run: python scripts/send_daily_digest.py
+      - name: Save deduplication history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/sent_history.json
+          git diff --cached --quiet || git commit -m "chore: update digest history"
+          git push
