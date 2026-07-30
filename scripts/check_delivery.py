@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import subprocess
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -34,6 +35,16 @@ def decide(marker_sent, runs, target):
     return "dispatch"
 
 
+def remote_marker_sent(repo, marker_name):
+    url = f"https://raw.githubusercontent.com/{repo}/main/data/sent_markers/{marker_name}.json"
+    try:
+        request = urllib.request.Request(url, headers={"User-Agent": "TrendingAI-Fallback/1.0"})
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return json.loads(response.read().decode("utf-8")).get("status") == "sent"
+    except Exception:
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--edition", choices=("current", "morning", "evening"), default="current")
@@ -43,13 +54,16 @@ def main():
     args = parser.parse_args()
     now = datetime.fromisoformat(args.now).astimezone(BEIJING) if args.now else datetime.now(BEIJING)
     slug, target = edition_values(now, args.edition)
-    marker_file = ROOT / "data" / "sent_markers" / f"{now:%Y-%m-%d}-{slug}.json"
+    marker_name = f"{now:%Y-%m-%d}-{slug}"
+    marker_file = ROOT / "data" / "sent_markers" / f"{marker_name}.json"
     marker_sent = False
     if marker_file.exists():
         try:
             marker_sent = json.loads(marker_file.read_text(encoding="utf-8")).get("status") == "sent"
         except json.JSONDecodeError:
             pass
+    if not marker_sent and not args.runs_json:
+        marker_sent = remote_marker_sent(os.environ.get("GH_REPO", "LeftSeineM/TrendingAI"), marker_name)
     if args.runs_json:
         runs = json.loads(Path(args.runs_json).read_text(encoding="utf-8"))
     else:
