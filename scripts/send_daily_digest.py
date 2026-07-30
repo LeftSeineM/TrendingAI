@@ -3,6 +3,7 @@
 
 import html
 import hashlib
+import argparse
 import json
 import os
 import re
@@ -46,6 +47,9 @@ EDITORIAL_FEEDS = {
     "Simon Willison": ("https://simonwillison.net/tags/ai.atom", "个人作者", 88),
 }
 HISTORY_PATH = Path(__file__).resolve().parent.parent / "data" / "sent_history.json"
+ROOT_PATH = Path(__file__).resolve().parent.parent
+MARKER_PATH = ROOT_PATH / "data" / "sent_markers"
+DOCS_PATH = ROOT_PATH / "docs" / "daily"
 BEIJING = ZoneInfo("Asia/Shanghai")
 UTC = ZoneInfo("UTC")
 
@@ -261,9 +265,19 @@ def deduplicate(items):
     for item in ordered:
         url_key = canonical_url(item["url"])
         title_key = normalized_title(item["title"])
-        if not title_key or url_key in seen_urls:
+        if not title_key:
             continue
-        if any(SequenceMatcher(None, title_key, old).ratio() >= 0.78 for old in seen_titles):
+        duplicate_index = next(
+            (index for index, old in enumerate(result)
+             if canonical_url(old["url"]) == url_key
+             or SequenceMatcher(None, title_key, seen_titles[index]).ratio() >= 0.78),
+            None,
+        )
+        if duplicate_index is not None:
+            primary = result[duplicate_index]
+            related = primary.setdefault("related_links", [])
+            if item["url"] != primary["url"] and all(link["url"] != item["url"] for link in related):
+                related.append({"source": item["source"], "url": item["url"]})
             continue
         seen_urls.add(url_key)
         seen_titles.append(title_key)
@@ -625,7 +639,8 @@ def item_tags(item):
         tags.insert(0, "科技新闻")
     elif item["source"] == "AI 人物与观点":
         tags.insert(0, "人物观点")
-    return list(dict.fromkeys(tags or ["AI"]))[:3]
+    names = {"AI": "人工智能", "Agent": "智能体", "API": "接口", "CLI": "命令行工具"}
+    return [names.get(tag, tag) for tag in list(dict.fromkeys(tags or ["人工智能"]))[:3]]
 
 
 def tag_html(item):
@@ -648,6 +663,13 @@ def back_to_toc():
     return '<a href="#toc" style="font-size:12px;color:#64748b;text-decoration:none">↑ 返回目录</a>'
 
 
+def detail_link(item):
+    if not item.get("detail_url"):
+        return ""
+    return (f' · <a href="{html.escape(item["detail_url"], quote=True)}" '
+            'style="color:#7c3aed;text-decoration:none">阅读详细版 →</a>')
+
+
 def builder_card(item):
     said = ensure_chinese(item.get("ai_first_value") or item["summary"])[:700]
     text = (item["summary"] + " " + item["title"]).lower()
@@ -667,7 +689,7 @@ def builder_card(item):
         f'<div style="margin-top:6px;line-height:1.55"><b>{html.escape(item.get("ai_first_label", "核心观点"))}：</b>{html.escape(said)}</div>'
         f'<div style="margin-top:6px;line-height:1.55"><b>{html.escape(item.get("ai_second_label", "为什么现在值得注意"))}：</b>{html.escape(ensure_chinese(item.get("ai_second_value", why)))}</div>'
         f'{repeat}<div style="margin-top:9px"><a href="{html.escape(item["url"], quote=True)}" '
-        'style="color:#2563eb">查看原始内容 →</a></div></div>'
+        f'style="color:#2563eb">查看原始内容 →</a>{detail_link(item)}</div></div>'
     )
 
 
@@ -729,7 +751,7 @@ def editorial_card(item, number=None):
         f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{first_label}：</b>{html.escape(first_value)}</div>'
         f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{second_label}：</b>{html.escape(second_value)}</div>'
         f'<div style="margin-top:8px"><a href="{html.escape(item["url"], quote=True)}" '
-        'style="color:#2563eb;text-decoration:none">阅读原文 →</a></div>'
+        f'style="color:#2563eb;text-decoration:none">阅读原文 →</a>{detail_link(item)}</div>'
         "</div>"
     )
 
@@ -741,7 +763,8 @@ def compact_link(item):
         f'{tag_html(item)}<br><a href="{html.escape(item["url"], quote=True)}" '
         f'style="color:#2563eb;text-decoration:none;font-weight:600">{html.escape(item["title"])}</a>'
         f'<div style="margin-top:3px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
-        f'<div style="margin-top:5px;color:#475569">{html.escape(summary)}</div></div>'
+        f'<div style="margin-top:5px;color:#475569">{html.escape(summary)}</div>'
+        f'<div style="margin-top:5px"><a href="{html.escape(item["url"], quote=True)}">阅读原文 →</a>{detail_link(item)}</div></div>'
     )
 
 
@@ -824,9 +847,9 @@ def ai_enrich(items):
                         items[index][f"ai_{key}"] = value[:500]
 
 
-def render(items, errors):
-    now = datetime.now(BEIJING)
-    edition = "上午篇" if now.hour < 12 else "下午篇"
+def render(items, errors, now=None, enrich=True, page_url="", edition_override=None):
+    now = now or datetime.now(BEIJING)
+    edition = edition_override or ("上午篇" if now.hour < 18 else "下午篇")
     authority = [x for x in items if x.get("source_class") in ("官方", "专业媒体", "个人作者")]
     authority.sort(key=lambda x: (
         1 if x.get("daily_scope") else 0,
@@ -885,7 +908,8 @@ def render(items, errors):
         if item["url"] not in selected_urls:
             selected.append(item)
             selected_urls.add(item["url"])
-    ai_enrich(selected)
+    if enrich:
+        ai_enrich(selected)
     warning = '<p style="color:#64748b">本次所有来源均正常。</p>'
     if errors:
         warning = '<p style="background:#fff7ed;padding:10px">部分来源暂时不可用：' + html.escape("；".join(errors)) + "</p>"
@@ -893,6 +917,7 @@ def render(items, errors):
 <div style="max-width:760px;margin:auto;background:white;padding:20px">
 <a id="top" name="top"></a><h1 style="font-size:24px;margin:0 0 8px">每日 AI 日报 · {edition}</h1>
 <p style="color:#6b7280;margin:4px 0">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条候选，已全局去重</p>
+{f'<p style="margin:12px 0"><a href="{html.escape(page_url, quote=True)}" style="display:inline-block;padding:10px 16px;background:#275efe;color:white;border-radius:9px;text-decoration:none;font-weight:700">查看完整深度版 →</a></p>' if page_url else ''}
 <p style="color:#475569;line-height:1.55;margin:8px 0">只读取最近三个自然日的来源条目；重点文章先读取正文再提炼结论，技术细节转译为大学生容易理解的能力、场景与影响。</p>
 <div id="toc" style="padding:11px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:12px 0">
 <b>目录</b>
@@ -945,30 +970,112 @@ def render(items, errors):
 {''.join(compact_link(x) for x in trend_latest) if trend_latest else '<p>本次没有未收录的今日趋势内容。</p>'}
 </div>
 <h2 style="margin-top:24px">来源状态</h2>{warning}
+<p style="padding:12px;background:#f8fafc;border-radius:8px">欢迎大家多多转发～如想订阅，请发送【订阅】到 19731018777@163.com</p>
 <p style="color:#9ca3af;font-size:12px">每日 AI 日报自动整理。</p>
 </div></body></html>"""
     return f"每日 AI 日报｜{edition}｜{now:%m月%d日 %H:%M}", body
 
 
+def parse_now(value):
+    if not value:
+        return datetime.now(BEIJING)
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return (parsed if parsed.tzinfo else parsed.replace(tzinfo=BEIJING)).astimezone(BEIJING)
+
+
+def edition_values(now, requested):
+    slug = requested if requested in ("morning", "evening") else ("morning" if now.hour < 18 else "evening")
+    return slug, "上午篇" if slug == "morning" else "下午篇"
+
+
+def marker_is_sent(marker_file, marker_key):
+    if marker_file.exists():
+        try:
+            if json.loads(marker_file.read_text(encoding="utf-8")).get("status") == "sent":
+                return True
+        except json.JSONDecodeError:
+            pass
+    # A rerun uses the old commit checkout, so always consult the current main
+    # branch as well. This closes the most common duplicate-send hole.
+    remote = ("https://raw.githubusercontent.com/LeftSeineM/TrendingAI/main/"
+              f"data/sent_markers/{marker_key}.json")
+    try:
+        return json.loads(fetch(remote, "application/json", timeout=10).decode("utf-8")).get("status") == "sent"
+    except Exception:
+        return False
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--edition", choices=("current", "morning", "evening"), default="current")
+    parser.add_argument("--now", default="")
+    parser.add_argument("--dry-run", action="store_true", help="Build email and Pages HTML without SMTP or markers")
+    parser.add_argument("--output", default="outputs/email-preview.html")
+    args = parser.parse_args()
+    now = parse_now(args.now)
+    edition_slug, edition_label = edition_values(now, args.edition)
+    marker_key = f"{now:%Y-%m-%d}-{edition_slug}"
+    marker_file = MARKER_PATH / f"{marker_key}.json"
+    if not args.dry_run and marker_is_sent(marker_file, marker_key):
+        print(f"SKIP_ALREADY_SENT marker={marker_key}")
+        return
+    collected, errors = collect()
+    # The web edition is intentionally complete for the three-day window. The
+    # email edition separately applies send history so morning content is not
+    # repeated in the afternoon.
+    web_items = deduplicate([dict(item) for item in collected])
+    items, history = filter_history(collected)
+    # First pass performs optional AI editing. The static site then provides
+    # stable per-item anchors used by the final email pass.
+    render(web_items, errors, now=now, enrich=True, edition_override=edition_label)
+    from digest_site import render_site
+    base_url = os.environ.get("PAGES_BASE_URL", "https://leftseinem.github.io/TrendingAI/daily")
+    funcs = {"editorial_fields": editorial_fields, "editorial_type": editorial_type,
+             "item_tags": item_tags, "display_time": display_time}
+    page_url, detail_urls = render_site(web_items, errors, now, edition_slug, edition_label,
+                                        DOCS_PATH, base_url, funcs)
+    enriched = {item["url"]: item for item in web_items}
+    for item in items:
+        source = enriched.get(item["url"], {})
+        for key, value in source.items():
+            if key.startswith("ai_"):
+                item[key] = value
+        item["detail_url"] = detail_urls.get(item["url"], page_url)
+    subject, body = render(items, errors, now=now, enrich=False, page_url=page_url,
+                           edition_override=edition_label)
+    output = ROOT_PATH / args.output
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(body, encoding="utf-8")
+    if args.dry_run:
+        print(f"DRY_RUN_OK items={len(items)} page={page_url} email={output}")
+        return
+
     sender = os.environ["QQ_EMAIL"].strip()
     auth_code = os.environ["QQ_SMTP_AUTH_CODE"].strip()
     configured = os.environ.get("DIGEST_RECIPIENTS") or os.environ.get("DIGEST_RECIPIENT", sender)
-    recipients = [address.strip() for address in configured.split(",") if address.strip()]
-    recipients = list(dict.fromkeys(recipients))
-    items, errors = collect()
-    items, history = filter_history(items)
-    subject, body = render(items, errors)
+    recipients = list(dict.fromkeys(address.strip() for address in configured.split(",") if address.strip()))
+    if not recipients:
+        raise RuntimeError("DIGEST_RECIPIENTS 为空")
+    if marker_is_sent(marker_file, marker_key):
+        print(f"SKIP_ALREADY_SENT marker={marker_key} phase=pre-smtp")
+        return
     with smtplib.SMTP_SSL("smtp.qq.com", 465, context=ssl.create_default_context(), timeout=30) as smtp:
         smtp.login(sender, auth_code)
-        for recipient in recipients:
-            message = EmailMessage()
-            message["Subject"], message["From"], message["To"] = subject, sender, recipient
-            message.set_content("请使用支持 HTML 的邮件客户端查看每日 AI 日报。")
-            message.add_alternative(body, subtype="html")
-            smtp.send_message(message)
+        message = EmailMessage()
+        message["Subject"], message["From"], message["To"] = subject, sender, sender
+        message["Bcc"] = ", ".join(recipients)
+        message.set_content(f"请使用支持 HTML 的邮件客户端查看每日 AI 日报。完整深度版：{page_url}")
+        message.add_alternative(body, subtype="html")
+        smtp.send_message(message)
+    # A successful marker is written only after the single BCC SMTP transaction
+    # returns successfully. Scheduled, manual and fallback runs all check it.
+    MARKER_PATH.mkdir(parents=True, exist_ok=True)
+    marker_file.write_text(json.dumps({
+        "marker": marker_key, "status": "sent", "sent_at": datetime.now(UTC).isoformat(),
+        "edition": edition_slug, "recipient_count": len(recipients), "page_url": page_url,
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     save_history(items, history)
-    print(f"Sent {len(items)} items to {len(recipients)} recipients: {subject}")
+    print(f"SENT marker={marker_key} items={len(items)} recipients={len(recipients)} page={page_url}")
 
 
 if __name__ == "__main__":

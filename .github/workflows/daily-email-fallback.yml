@@ -1,0 +1,32 @@
+name: Daily Email Cloud Fallback
+
+on:
+  schedule:
+    # 00:15/10:15 UTC = 08:15/18:15 Asia/Shanghai.
+    - cron: "15 0,10 * * *"
+  workflow_dispatch:
+    inputs:
+      edition:
+        required: true
+        default: current
+        type: choice
+        options: [current, morning, evening]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check marker and running jobs; dispatch only when missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python scripts/check_delivery.py --edition "${{ inputs.edition || 'current' }}"
