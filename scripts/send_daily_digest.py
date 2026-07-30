@@ -746,6 +746,7 @@ def ai_enrich(items):
 
 def render(items, errors):
     now = datetime.now(BEIJING)
+    edition = "上午篇" if now.hour < 12 else "下午篇"
     authority = [x for x in items if x.get("source_class") in ("官方", "专业媒体", "个人作者")]
     authority.sort(key=lambda x: (
         1 if x.get("daily_scope") else 0,
@@ -809,7 +810,7 @@ def render(items, errors):
         warning = '<p style="background:#fff7ed;padding:10px">部分来源暂时不可用：' + html.escape("；".join(errors)) + "</p>"
     body = f"""<!doctype html><html><body style="margin:0;background:#f3f4f6;font-family:Arial,'Microsoft YaHei',sans-serif;font-size:14px;line-height:1.55;color:#1f2937">
 <div style="max-width:760px;margin:auto;background:white;padding:20px">
-<a id="top" name="top"></a><h1 style="font-size:24px;margin:0 0 8px">每日 AI 日报</h1>
+<a id="top" name="top"></a><h1 style="font-size:24px;margin:0 0 8px">每日 AI 日报 · {edition}</h1>
 <p style="color:#6b7280;margin:4px 0">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条候选，已全局去重</p>
 <p style="color:#475569;line-height:1.55;margin:8px 0">完整读取当天与前一天的来源条目；重要内容展开，技术细节转译为大学生容易理解的能力、场景与影响，其余保留为速览。</p>
 <div id="toc" style="padding:11px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:12px 0">
@@ -865,7 +866,7 @@ def render(items, errors):
 <h2 style="margin-top:24px">来源状态</h2>{warning}
 <p style="color:#9ca3af;font-size:12px">每日 AI 日报自动整理。</p>
 </div></body></html>"""
-    return f"每日 AI 日报｜{now:%m月%d日 %H:%M}", body
+    return f"每日 AI 日报｜{edition}｜{now:%m月%d日 %H:%M}", body
 
 
 def main():
