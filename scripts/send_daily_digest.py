@@ -11,6 +11,7 @@ import ssl
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from email.message import EmailMessage
 from email.utils import parsedate_to_datetime
@@ -45,6 +46,8 @@ EDITORIAL_FEEDS = {
     "Simon Willison": ("https://simonwillison.net/tags/ai.atom", "个人作者", 88),
 }
 HISTORY_PATH = Path(__file__).resolve().parent.parent / "data" / "sent_history.json"
+BEIJING = ZoneInfo("Asia/Shanghai")
+UTC = ZoneInfo("UTC")
 
 TOPICS = (
     (("agent", "copilot", "automation", "workflow", "智能体"),
@@ -125,15 +128,26 @@ def parse_feed_time(value):
             return None
 
 
+def in_current_or_previous_day(published_at, now=None):
+    """Use Beijing calendar days so morning and evening editions share one clear window."""
+    if not published_at:
+        return False
+    now = now or datetime.now(BEIJING)
+    local_date = published_at.astimezone(BEIJING).date()
+    return local_date >= (now.date() - timedelta(days=1))
+
+
 def editorial_feeds():
-    """Collect a 14-day pool from official, edited-media and trusted-author feeds."""
-    now = datetime.now(ZoneInfo("UTC"))
+    """Read every available feed article from today/yesterday, plus a 14-day fallback pool."""
+    now = datetime.now(UTC)
     result, errors = [], []
     for source, (url, source_class, authority) in EDITORIAL_FEEDS.items():
         try:
             root = ET.fromstring(fetch(url, "application/rss+xml,application/atom+xml,text/xml"))
             entries = [node for node in root.iter() if node.tag.rsplit("}", 1)[-1] in ("item", "entry")]
-            for entry in entries[:20]:
+            # Do not cap before date filtering: busy sources may publish more than 20
+            # articles across the two calendar days that readers asked us to cover.
+            for entry in entries:
                 fields = {}
                 links = []
                 for child in entry.iter():
@@ -160,6 +174,7 @@ def editorial_feeds():
                     "summary": summary[:1200] or "原始来源未提供摘要，请打开原文查看。",
                     "score": authority,
                     "created_at": published,
+                    "daily_scope": in_current_or_previous_day(published_at),
                 })
         except Exception as exc:
             errors.append(f"{source}: {type(exc).__name__}: {exc}")
@@ -384,6 +399,9 @@ def follow_builders():
                             "summary": text,
                             "created_at": post.get("createdAt", ""),
                             "score": engagement,
+                            "daily_scope": in_current_or_previous_day(
+                                parse_feed_time(post.get("createdAt", ""))
+                            ),
                         })
             else:
                 key = "podcasts" if kind == "播客" else "blogs"
@@ -409,6 +427,10 @@ def follow_builders():
                             "created_at": entry.get("publishedAt") or entry.get("published")
                                           or entry.get("date") or "",
                             "score": 200,
+                            "daily_scope": in_current_or_previous_day(parse_feed_time(
+                                entry.get("publishedAt") or entry.get("published")
+                                or entry.get("date") or ""
+                            )),
                         })
             for error in data.get("errors", []) if isinstance(data.get("errors"), list) else []:
                 feed_errors.append(f"follow-builders {kind}: {clean(str(error))[:180]}")
@@ -560,13 +582,13 @@ def builder_card(item):
         why = "这条内容补充了产品新闻背后的行业判断，有助于区分短期热点与长期变化。"
     repeat = '<div style="margin-top:6px;color:#b45309;font-weight:600">上午已收录</div>' if item.get("morning_repeat") else ""
     return (
-        '<div style="padding:15px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:10px 0">'
-        f'<div style="font-size:16px;font-weight:700">{html.escape(item["title"])} '
+        '<div style="padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:8px 0">'
+        f'<div style="font-size:15px;font-weight:700">{html.escape(item["title"])} '
         f'<span style="font-size:12px;color:#7c3aed">· {html.escape(item["kind"])}</span></div>'
         f'<div style="margin-top:5px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
         f'<div style="margin-top:7px">{tag_html(item)}</div>'
-        f'<div style="margin-top:8px;line-height:1.65"><b>{html.escape(item.get("ai_first_label", "核心观点"))}：</b>{html.escape(said)}</div>'
-        f'<div style="margin-top:8px;line-height:1.65"><b>{html.escape(item.get("ai_second_label", "为什么现在值得注意"))}：</b>{html.escape(item.get("ai_second_value", why))}</div>'
+        f'<div style="margin-top:6px;line-height:1.55"><b>{html.escape(item.get("ai_first_label", "核心观点"))}：</b>{html.escape(said)}</div>'
+        f'<div style="margin-top:6px;line-height:1.55"><b>{html.escape(item.get("ai_second_label", "为什么现在值得注意"))}：</b>{html.escape(item.get("ai_second_value", why))}</div>'
         f'{repeat}<div style="margin-top:9px"><a href="{html.escape(item["url"], quote=True)}" '
         'style="color:#2563eb">查看原始内容 →</a></div></div>'
     )
@@ -621,14 +643,14 @@ def editorial_card(item, number=None):
     prefix = f"{number}. " if number else ""
     kind, first_label, first_value, second_label, second_value = editorial_fields(item)
     return (
-        '<div style="padding:15px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin:10px 0">'
-        f'<div style="font-size:16px;font-weight:700">{prefix}<a style="color:#2563eb;text-decoration:none" '
+        '<div style="padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:8px 0">'
+        f'<div style="font-size:15px;font-weight:700">{prefix}<a style="color:#2563eb;text-decoration:none" '
         f'href="{html.escape(item["url"], quote=True)}">{html.escape(item["title"])}</a></div>'
         f'<div style="margin-top:5px;color:#6b7280;font-size:12px">{html.escape(item["source"])} · {kind}</div>'
         f'<div style="margin-top:4px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
         f'<div style="margin-top:7px">{tag_html(item)}</div>'
-        f'<div style="margin-top:7px;color:#374151;line-height:1.65"><b>{first_label}：</b>{html.escape(first_value)}</div>'
-        f'<div style="margin-top:7px;color:#374151;line-height:1.65"><b>{second_label}：</b>{html.escape(second_value)}</div>'
+        f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{first_label}：</b>{html.escape(first_value)}</div>'
+        f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{second_label}：</b>{html.escape(second_value)}</div>'
         "</div>"
     )
 
@@ -651,14 +673,9 @@ def ai_enrich(items):
     model = os.environ.get("AI_MODEL", "").strip()
     if not (api_key and base_url and model and items):
         return
-    payload_items = [{
-        "id": index,
-        "source": item["source"],
-        "title": item["title"],
-        "summary": item["summary"][:900],
-        "kind": item.get("kind", ""),
-    } for index, item in enumerate(items)]
-    prompt = """你是每日 AI 日报的中文编辑。只根据输入内容编辑，不补充无法核验的事实。
+    prompt_prefix = """你是每日 AI 日报的中文编辑。读者是渴望新知识、但不是本领域教授的大学生。
+只根据输入内容编辑，不补充无法核验的事实。遇到太底层的实现细节，翻译成能力变化、使用场景或现实影响；
+不要堆术语，也不要把读者当初学儿童。不同内容使用不同写法，避免每条都套同一个模板。
 为每条内容返回：
 1. tags：1～3 个明确短 Tag；
 2. first_label、first_value；
@@ -667,49 +684,74 @@ def ai_enrich(items):
 人物观点使用“核心观点 / 为什么现在值得注意”；开源项目使用“解决什么问题 / 是否值得尝试”；
 研究或模型使用“能力变化 / 普通人会受到什么影响”。
 写法接近专业科技媒体简报：先讲清事实，再给必要背景和判断，避免宣传腔、空话和机械套模板。
-语言自然、具体、简短，英文信息翻译为中文。只返回 {"items": [...]} JSON 对象，每项保留输入 id。输入如下：
-""" + json.dumps(payload_items, ensure_ascii=False)
-    request_body = json.dumps({
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
-    }, ensure_ascii=False).encode("utf-8")
-    request = urllib.request.Request(
-        f"{base_url}/chat/completions",
-        data=request_body,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=45) as response:
-            result = json.loads(response.read().decode("utf-8"))
-        content = result["choices"][0]["message"]["content"]
-        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.I)
-        parsed = json.loads(content)
-        rows = parsed.get("items", parsed) if isinstance(parsed, dict) else parsed
-        if not isinstance(rows, list):
-            return
-        for row in rows:
-            index = row.get("id") if isinstance(row, dict) else None
-            if not isinstance(index, int) or not 0 <= index < len(items):
-                continue
-            tags = row.get("tags")
-            if isinstance(tags, list):
-                items[index]["ai_tags"] = [clean(str(tag))[:16] for tag in tags[:3] if clean(str(tag))]
-            for key in ("first_label", "first_value", "second_label", "second_value"):
-                value = clean(str(row.get(key, "")))
-                if value:
-                    items[index][f"ai_{key}"] = value[:700]
-    except Exception:
-        # AI editing is optional. Any API/configuration/format failure falls back
-        # to deterministic editorial rules so the scheduled email still sends.
-        return
+语言自然、具体、紧凑，英文信息翻译为中文。单项两段合计尽量控制在 150 字以内。
+只返回 {"items": [...]} JSON 对象，每项保留输入 id。输入如下：
+"""
+    # Batch the whole candidate set. A small worker pool keeps complete coverage
+    # practical without making the workflow wait for every request sequentially.
+    def edit_batch(start):
+        batch = items[start:start + 12]
+        payload_items = [{
+            "id": start + index,
+            "source": item["source"],
+            "title": item["title"],
+            "summary": item["summary"][:1200],
+            "kind": item.get("kind", ""),
+            "published_at": item.get("created_at", ""),
+        } for index, item in enumerate(batch)]
+        request_body = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt_prefix + json.dumps(payload_items, ensure_ascii=False)}],
+            "temperature": 0.2,
+        }, ensure_ascii=False).encode("utf-8")
+        request = urllib.request.Request(
+            f"{base_url}/chat/completions",
+            data=request_body,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                result = json.loads(response.read().decode("utf-8"))
+            content = result["choices"][0]["message"]["content"]
+            content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.I)
+            parsed = json.loads(content)
+            rows = parsed.get("items", parsed) if isinstance(parsed, dict) else parsed
+            if not isinstance(rows, list):
+                return []
+            return rows
+        except Exception:
+            return []
+
+    starts = list(range(0, len(items), 12))
+    with ThreadPoolExecutor(max_workers=min(3, len(starts))) as executor:
+        futures = {executor.submit(edit_batch, start): start for start in starts}
+        for future in as_completed(futures):
+            try:
+                rows = future.result()
+            except Exception:
+                rows = []
+            for row in rows:
+                index = row.get("id") if isinstance(row, dict) else None
+                if not isinstance(index, int) or not 0 <= index < len(items):
+                    continue
+                tags = row.get("tags")
+                if isinstance(tags, list):
+                    items[index]["ai_tags"] = [clean(str(tag))[:16] for tag in tags[:3] if clean(str(tag))]
+                for key in ("first_label", "first_value", "second_label", "second_value"):
+                    value = clean(str(row.get(key, "")))
+                    if value:
+                        items[index][f"ai_{key}"] = value[:500]
 
 
 def render(items, errors):
-    now = datetime.now(ZoneInfo("Asia/Shanghai"))
+    now = datetime.now(BEIJING)
     authority = [x for x in items if x.get("source_class") in ("官方", "专业媒体", "个人作者")]
-    authority.sort(key=lambda x: (x.get("score", 0), parse_time(x.get("created_at"))), reverse=True)
+    authority.sort(key=lambda x: (
+        1 if x.get("daily_scope") else 0,
+        x.get("score", 0),
+        parse_time(x.get("created_at")),
+    ), reverse=True)
     highlights, source_counts = [], {}
     for item in authority:
         if source_counts.get(item["source"], 0) >= 1:
@@ -730,8 +772,9 @@ def render(items, errors):
         if len(authoritative_more) == 5:
             break
     used_urls = highlight_urls | {x["url"] for x in authoritative_more}
-    indie = [x for x in items if x["source"] == "独立开发者新品"][:3]
-    used_urls |= {x["url"] for x in indie}
+    indie_all = [x for x in items if x["source"] == "独立开发者新品"]
+    indie = indie_all[:3]
+    used_urls |= {x["url"] for x in indie_all}
     builders = [x for x in select_builder_items(items, now) if x["url"] not in used_urls][:3]
     used_urls |= {x["url"] for x in builders}
     discovered = [x for x in items if x["url"] not in used_urls and not x.get("source_class")
@@ -742,26 +785,36 @@ def render(items, errors):
     trend_latest = sorted(
         [x for x in items if x["source"] in original_sources and x["url"] not in used_urls],
         key=lambda x: (parse_time(x.get("created_at")), x.get("score", 0)), reverse=True,
-    )[:5]
+    )
     used_urls |= {x["url"] for x in trend_latest}
-    more = sorted([x for x in items if x["url"] not in used_urls
-                   and x["source"] != "独立开发者新品"
-                   and x["source"] not in original_sources and
-                   (x["source"] != "AI 人物与观点" or len(x.get("summary", "")) >= 120)],
-                  key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:8]
-    selected = highlights + authoritative_more + indie + builders + tech
-    ai_enrich(selected + more)
+    remaining = [x for x in items if x["url"] not in used_urls
+                 and x["source"] != "独立开发者新品"
+                 and x["source"] not in original_sources and
+                 (x["source"] != "AI 人物与观点" or len(x.get("summary", "")) >= 120)]
+    # Never omit today/yesterday's feed articles. Older fallback items are capped
+    # so a quiet day still has useful context without turning into an archive dump.
+    recent_more = [x for x in remaining if x.get("daily_scope")]
+    older_more = [x for x in remaining if not x.get("daily_scope")]
+    more = sorted(recent_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)
+    more += sorted(older_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:8]
+    indie_more = indie_all[3:]
+    selected, selected_urls = [], set()
+    for item in highlights + authoritative_more + indie_all + builders + tech + more + trend_latest:
+        if item["url"] not in selected_urls:
+            selected.append(item)
+            selected_urls.add(item["url"])
+    ai_enrich(selected)
     warning = '<p style="color:#64748b">本次所有来源均正常。</p>'
     if errors:
         warning = '<p style="background:#fff7ed;padding:10px">部分来源暂时不可用：' + html.escape("；".join(errors)) + "</p>"
-    body = f"""<!doctype html><html><body style="margin:0;background:#f3f4f6;font-family:Arial,'Microsoft YaHei',sans-serif">
-<div style="max-width:760px;margin:auto;background:white;padding:26px">
-<a id="top" name="top"></a><h1>每日 AI 日报</h1>
-<p style="color:#6b7280">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条</p>
-<p style="color:#475569;line-height:1.7">从最近 14 天的官方发布、专业媒体、优质作者和实时榜单中筛选，并与近 30 天发送记录去重。</p>
-<div id="toc" style="padding:15px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin:16px 0">
+    body = f"""<!doctype html><html><body style="margin:0;background:#f3f4f6;font-family:Arial,'Microsoft YaHei',sans-serif;font-size:14px;line-height:1.55;color:#1f2937">
+<div style="max-width:760px;margin:auto;background:white;padding:20px">
+<a id="top" name="top"></a><h1 style="font-size:24px;margin:0 0 8px">每日 AI 日报</h1>
+<p style="color:#6b7280;margin:4px 0">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条候选，已全局去重</p>
+<p style="color:#475569;line-height:1.55;margin:8px 0">完整读取当天与前一天的来源条目；重要内容展开，技术细节转译为大学生容易理解的能力、场景与影响，其余保留为速览。</p>
+<div id="toc" style="padding:11px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:12px 0">
 <b>目录</b>
-<div style="margin-top:9px;line-height:2">
+<div style="margin-top:6px;line-height:1.75">
 <a href="#highlights" style="color:#2563eb">一、本期看点</a><br>
 <a href="#authority" style="color:#2563eb">二、权威资讯与行业变化</a><br>
 <a href="#voices" style="color:#2563eb">三、人物与观点</a><br>
@@ -771,41 +824,42 @@ def render(items, errors):
 <a href="#trends" style="color:#2563eb">七、原始趋势源·今日速览</a>
 </div></div>
 <a id="highlights" name="highlights"></a>
-<div style="padding:18px;background:#fff7ed;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#9a3412">一、本期看点</h2>{back_to_toc()}
+<div style="padding:14px;background:#fff7ed;border-radius:8px;margin-bottom:14px">
+<h2 style="color:#9a3412;font-size:19px;margin:0 0 6px">一、本期看点</h2>{back_to_toc()}
 <p style="color:#475569;line-height:1.6">优先采用官方原文和专业编辑来源，把同一事件合并后讲清楚。</p>
 {''.join(editorial_card(x, i) for i, x in enumerate(highlights, 1)) if highlights else '<p>本期暂未发现足够重要的新内容。</p>'}
 </div>
 <a id="authority" name="authority"></a>
-<div style="padding:18px;background:#f8fafc;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#334155">二、权威资讯与行业变化</h2>{back_to_toc()}
+<div style="padding:14px;background:#f8fafc;border-radius:8px;margin-bottom:14px">
+<h2 style="color:#334155;font-size:19px;margin:0 0 6px">二、权威资讯与行业变化</h2>{back_to_toc()}
 {''.join(editorial_card(x, i) for i, x in enumerate(authoritative_more, 1)) if authoritative_more else '<p>本期暂无补充。</p>'}
 </div>
 <a id="voices" name="voices"></a>
-<div style="padding:18px;background:#f5f3ff;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#6d28d9">三、人物与观点</h2>{back_to_toc()}
+<div style="padding:14px;background:#f5f3ff;border-radius:8px;margin-bottom:14px">
+<h2 style="color:#6d28d9;font-size:19px;margin:0 0 6px">三、人物与观点</h2>{back_to_toc()}
 <p style="color:#475569;line-height:1.6">只保留有完整论点、实际经验或明确判断的内容。</p>
 {''.join(builder_card(x) for x in builders) if builders else '<p>本次中央 Feed 暂无足够有信息量的新内容。</p>'}
 </div>
 <a id="tech" name="tech"></a>
-<div style="padding:18px;background:#eff6ff;border-radius:10px">
-<h2 style="color:#1d4ed8">四、开源、模型与研究</h2>{back_to_toc()}
+<div style="padding:14px;background:#eff6ff;border-radius:8px">
+<h2 style="color:#1d4ed8;font-size:19px;margin:0 0 6px">四、开源、模型与研究</h2>{back_to_toc()}
 <p style="color:#475569;line-height:1.6">榜单只负责发现线索，优先保留真正解决问题或带来能力变化的项目。</p>
 {''.join(editorial_card(x, i) for i, x in enumerate(tech, 1))}
 </div>
-<a id="more" name="more"></a><h1>五、更多资讯</h1>{back_to_toc()}
-<p style="color:#64748b">每条保留一句话摘要，不再只列标题。</p>
+<a id="more" name="more"></a><h2 style="font-size:19px">五、更多资讯</h2>{back_to_toc()}
+<p style="color:#64748b">当天与前一天未进入重点区的内容全部保留，并标明来源、时间和原文链接。</p>
 {''.join(compact_link(x) for x in more)}
 <a id="apps" name="apps"></a>
-<div style="padding:18px;background:#f0fdf4;border-radius:10px;margin:20px 0">
-<h2 style="color:#166534">六、今日独立开发者新品</h2>{back_to_toc()}
+<div style="padding:14px;background:#f0fdf4;border-radius:8px;margin:16px 0">
+<h2 style="color:#166534;font-size:19px;margin:0 0 6px">六、今日独立开发者新品</h2>{back_to_toc()}
 <p style="color:#475569;line-height:1.6">保留 Chinese Independent Developer，每期只展示当天或最近一批的 3 个最新应用。</p>
 {''.join(editorial_card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的应用。</p>'}
+{''.join(compact_link(x) for x in indie_more)}
 </div>
 <a id="trends" name="trends"></a>
-<div style="padding:18px;background:#f8fafc;border-radius:10px;margin-bottom:18px">
-<h2 style="color:#334155">七、原始趋势源·今日速览</h2>{back_to_toc()}
-<p style="color:#64748b">保留最早的 TrendingAI 发现方式，只放 GitHub Trending、Hacker News、Product Hunt 和关注项目中当天最新的少量内容。</p>
+<div style="padding:14px;background:#f8fafc;border-radius:8px;margin-bottom:14px">
+<h2 style="color:#334155;font-size:19px;margin:0 0 6px">七、原始趋势源·今日速览</h2>{back_to_toc()}
+<p style="color:#64748b">GitHub Trending、Hacker News、Product Hunt 和关注项目的本次新增条目全部保留；技术性过强的内容只做一句话说明。</p>
 {''.join(compact_link(x) for x in trend_latest) if trend_latest else '<p>本次没有未收录的今日趋势内容。</p>'}
 </div>
 <h2 style="margin-top:24px">来源状态</h2>{warning}
