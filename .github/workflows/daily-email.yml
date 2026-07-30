@@ -40,6 +40,7 @@ jobs:
           AI_BASE_URL: ${{ vars.AI_BASE_URL }}
           AI_MODEL: ${{ vars.AI_MODEL }}
           PAGES_BASE_URL: https://leftseinem.github.io/TrendingAI/daily
+          GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/send_daily_digest.py --edition "${{ inputs.edition || 'current' }}"
       - name: Save successful marker, history and Pages content
         run: |

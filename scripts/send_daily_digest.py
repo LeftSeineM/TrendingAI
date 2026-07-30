@@ -4,6 +4,7 @@
 import html
 import hashlib
 import argparse
+import base64
 import json
 import os
 import re
@@ -1005,6 +1006,35 @@ def marker_is_sent(marker_file, marker_key):
         return False
 
 
+def cloud_marker(marker_key, payload=None, sha=None):
+    """Read or atomically create/update a marker through GitHub Contents API."""
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    repository = os.environ.get("GITHUB_REPOSITORY", "LeftSeineM/TrendingAI")
+    if not token:
+        return None
+    path = f"data/sent_markers/{marker_key}.json"
+    url = f"https://api.github.com/repos/{repository}/contents/{path}"
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
+               "User-Agent": "TrendingAI-Digest/3.0"}
+    if payload is None:
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=15) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            content = json.loads(base64.b64decode(data["content"]).decode("utf-8"))
+            return {"status": content.get("status"), "sha": data.get("sha")}
+        except Exception:
+            return None
+    body = {"message": f"chore: {payload['status']} digest {marker_key}",
+            "content": base64.b64encode((json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode()).decode(),
+            "branch": "main"}
+    if sha:
+        body["sha"] = sha
+    request = urllib.request.Request(url, data=json.dumps(body).encode(), headers={**headers, "Content-Type": "application/json"}, method="PUT")
+    with urllib.request.urlopen(request, timeout=20) as response:
+        result = json.loads(response.read().decode("utf-8"))
+    return {"status": payload["status"], "sha": result.get("content", {}).get("sha")}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--edition", choices=("current", "morning", "evening"), default="current")
@@ -1059,6 +1089,19 @@ def main():
     if marker_is_sent(marker_file, marker_key):
         print(f"SKIP_ALREADY_SENT marker={marker_key} phase=pre-smtp")
         return
+    lock = None
+    if os.environ.get("GITHUB_TOKEN"):
+        existing = cloud_marker(marker_key)
+        if existing and existing.get("status") in ("sending", "sent"):
+            print(f"SKIP_MARKER_STATE marker={marker_key} status={existing['status']}")
+            return
+        lock_payload = {"marker": marker_key, "status": "sending",
+                        "started_at": datetime.now(UTC).isoformat(),
+                        "run_id": os.environ.get("GITHUB_RUN_ID", "")}
+        try:
+            lock = cloud_marker(marker_key, lock_payload)
+        except Exception as exc:
+            raise RuntimeError(f"无法取得云端发送锁，已停止发送：{exc}") from exc
     with smtplib.SMTP_SSL("smtp.qq.com", 465, context=ssl.create_default_context(), timeout=30) as smtp:
         smtp.login(sender, auth_code)
         message = EmailMessage()
@@ -1069,11 +1112,15 @@ def main():
         smtp.send_message(message)
     # A successful marker is written only after the single BCC SMTP transaction
     # returns successfully. Scheduled, manual and fallback runs all check it.
-    MARKER_PATH.mkdir(parents=True, exist_ok=True)
-    marker_file.write_text(json.dumps({
+    success_marker = {
         "marker": marker_key, "status": "sent", "sent_at": datetime.now(UTC).isoformat(),
         "edition": edition_slug, "recipient_count": len(recipients), "page_url": page_url,
-    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    }
+    if lock:
+        cloud_marker(marker_key, success_marker, sha=lock.get("sha"))
+    else:
+        MARKER_PATH.mkdir(parents=True, exist_ok=True)
+        marker_file.write_text(json.dumps(success_marker, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     save_history(items, history)
     print(f"SENT marker={marker_key} items={len(items)} recipients={len(recipients)} page={page_url}")
 

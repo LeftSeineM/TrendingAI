@@ -24,16 +24,20 @@ site = load("site", ROOT / "scripts" / "digest_site.py")
 class DeliveryTests(unittest.TestCase):
     def test_marker_wins(self):
         target = datetime(2026, 7, 30, 8, tzinfo=ZoneInfo("Asia/Shanghai"))
-        self.assertEqual("sent", fallback.decide(True, [], target))
+        self.assertEqual("sent", fallback.decide("sent", [], target))
+
+    def test_sending_marker_waits(self):
+        target = datetime(2026, 7, 30, 8, tzinfo=ZoneInfo("Asia/Shanghai"))
+        self.assertEqual("running", fallback.decide("sending", [], target))
 
     def test_active_run_prevents_duplicate(self):
         target = datetime(2026, 7, 30, 8, tzinfo=ZoneInfo("Asia/Shanghai"))
         runs = [{"createdAt": "2026-07-30T00:05:00Z", "status": "in_progress"}]
-        self.assertEqual("running", fallback.decide(False, runs, target))
+        self.assertEqual("running", fallback.decide("", runs, target))
 
     def test_missing_run_dispatches(self):
         target = datetime(2026, 7, 30, 18, tzinfo=ZoneInfo("Asia/Shanghai"))
-        self.assertEqual("dispatch", fallback.decide(False, [], target))
+        self.assertEqual("dispatch", fallback.decide("", [], target))
 
     def test_wechat_articles_do_not_collapse(self):
         a = digest.canonical_url("https://mp.weixin.qq.com/s?__biz=A&mid=1")
@@ -60,6 +64,7 @@ class DeliveryTests(unittest.TestCase):
             self.assertIn("全部来源", page)
             self.assertIn("阅读原文", page)
             self.assertIn("测试文章", page)
+            self.assertIn("下午篇尚未生成", page)
             self.assertTrue(url.endswith("2026-07-30-morning.html"))
             self.assertIn(item["url"], anchors)
             self.assertEqual(1, len(json.loads((Path(tmp) / "archive.json").read_text(encoding="utf-8"))))

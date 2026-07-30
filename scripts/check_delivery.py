@@ -22,9 +22,11 @@ def edition_values(now, requested):
     return slug, target
 
 
-def decide(marker_sent, runs, target):
-    if marker_sent:
+def decide(marker_status, runs, target):
+    if marker_status == "sent" or marker_status is True:
         return "sent"
+    if marker_status == "sending":
+        return "running"
     for run in runs:
         try:
             created = datetime.fromisoformat(run.get("createdAt", "").replace("Z", "+00:00"))
@@ -35,14 +37,14 @@ def decide(marker_sent, runs, target):
     return "dispatch"
 
 
-def remote_marker_sent(repo, marker_name):
+def remote_marker_status(repo, marker_name):
     url = f"https://raw.githubusercontent.com/{repo}/main/data/sent_markers/{marker_name}.json"
     try:
         request = urllib.request.Request(url, headers={"User-Agent": "TrendingAI-Fallback/1.0"})
         with urllib.request.urlopen(request, timeout=10) as response:
-            return json.loads(response.read().decode("utf-8")).get("status") == "sent"
+            return json.loads(response.read().decode("utf-8")).get("status", "")
     except Exception:
-        return False
+        return ""
 
 
 def main():
@@ -56,14 +58,14 @@ def main():
     slug, target = edition_values(now, args.edition)
     marker_name = f"{now:%Y-%m-%d}-{slug}"
     marker_file = ROOT / "data" / "sent_markers" / f"{marker_name}.json"
-    marker_sent = False
+    marker_status = ""
     if marker_file.exists():
         try:
-            marker_sent = json.loads(marker_file.read_text(encoding="utf-8")).get("status") == "sent"
+            marker_status = json.loads(marker_file.read_text(encoding="utf-8")).get("status", "")
         except json.JSONDecodeError:
             pass
-    if not marker_sent and not args.runs_json:
-        marker_sent = remote_marker_sent(os.environ.get("GH_REPO", "LeftSeineM/TrendingAI"), marker_name)
+    if not marker_status and not args.runs_json:
+        marker_status = remote_marker_status(os.environ.get("GH_REPO", "LeftSeineM/TrendingAI"), marker_name)
     if args.runs_json:
         runs = json.loads(Path(args.runs_json).read_text(encoding="utf-8"))
     else:
@@ -73,7 +75,7 @@ def main():
             "databaseId,event,status,conclusion,createdAt,url",
         ], text=True)
         runs = json.loads(raw)
-    action = decide(marker_sent, runs, target)
+    action = decide(marker_status, runs, target)
     if action == "sent":
         print(f"DELIVERY_OK marker={now:%Y-%m-%d}-{slug}")
         return
