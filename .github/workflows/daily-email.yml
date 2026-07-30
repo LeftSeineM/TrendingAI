@@ -2,8 +2,8 @@ name: TrendingAI Daily Email
 
 on:
   schedule:
-    # GitHub Actions uses UTC. 03:00/09:00 UTC = 11:00/17:00 Asia/Shanghai.
-    - cron: "0 3,9 * * *"
+    # GitHub Actions uses UTC. 03:07/09:07 UTC = 11:07/17:07 Asia/Shanghai.
+    - cron: "7 3,9 * * *"
   workflow_dispatch:
 
 permissions:
