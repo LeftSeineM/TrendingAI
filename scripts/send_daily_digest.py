@@ -223,12 +223,17 @@ def load_history():
 
 def filter_history(items, history=None):
     history = history if history is not None else load_history()
-    cutoff = datetime.now(ZoneInfo("UTC")) - timedelta(days=30)
+    now_utc = datetime.now(UTC)
+    today_beijing = now_utc.astimezone(BEIJING).date()
+    cutoff = now_utc - timedelta(days=30)
     active = []
+    same_day_titles = []
     for row in history:
         sent_at = parse_feed_time(row.get("sent_at", ""))
-        if sent_at and sent_at.astimezone(ZoneInfo("UTC")) >= cutoff:
+        if sent_at and sent_at.astimezone(UTC) >= cutoff:
             active.append(row)
+            if sent_at.astimezone(BEIJING).date() == today_beijing and row.get("title_key"):
+                same_day_titles.append(row["title_key"])
     seen_urls = {row.get("url_hash") for row in active}
     seen_titles = [row.get("title_key", "") for row in active if row.get("title_key")]
     fresh = []
@@ -236,6 +241,12 @@ def filter_history(items, history=None):
         url_hash = hashlib.sha256(canonical_url(item["url"]).encode()).hexdigest()[:20]
         title_key = normalized_title(item["title"])
         if url_hash in seen_urls:
+            continue
+        # The afternoon edition should feel new. Use a stricter similarity
+        # threshold for stories already mailed earlier on the same Beijing day,
+        # including the same event reported by a different publication.
+        if any(SequenceMatcher(None, title_key, old).ratio() >= 0.72
+               for old in same_day_titles):
             continue
         if any(SequenceMatcher(None, title_key, old).ratio() >= 0.84 for old in seen_titles):
             continue
