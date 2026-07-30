@@ -115,6 +115,21 @@ def translate_zh(text):
         return text
 
 
+def ensure_chinese(text):
+    """Allow English titles, but never leave an English paragraph in the body."""
+    original = clean(text)
+    latin = len(re.findall(r"[A-Za-z]", original))
+    han = len(re.findall(r"[\u4e00-\u9fff]", original))
+    if latin <= max(30, han * 2):
+        return original
+    translated = translate_zh(original)
+    latin_after = len(re.findall(r"[A-Za-z]", translated))
+    han_after = len(re.findall(r"[\u4e00-\u9fff]", translated))
+    if latin_after > max(30, han_after * 2):
+        return "中文摘要暂时生成失败，请打开原文查看完整内容。"
+    return translated
+
+
 def parse_feed_time(value):
     if not value:
         return None
@@ -189,6 +204,8 @@ def normalized_title(title):
 
 
 def canonical_url(url):
+    if re.match(r"https?://mp\.weixin\.qq\.com/s(?:\?|$)", url.strip(), re.I):
+        return re.sub(r"#.*$", "", url.strip()).rstrip("/")
     return re.sub(r"[?#].*$", "", url.strip()).rstrip("/")
 
 
@@ -571,9 +588,17 @@ def item_tags(item):
 
 
 def tag_html(item):
+    tag_names = {
+        "AI": "人工智能",
+        "Agent": "智能体",
+        "API": "接口",
+        "CLI": "命令行工具",
+        "Open Source": "开源",
+    }
     return "".join(
         f'<span style="display:inline-block;margin:0 5px 5px 0;padding:3px 8px;'
-        f'border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:12px">{html.escape(tag)}</span>'
+        f'border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:12px">'
+        f'{html.escape(tag_names.get(tag, tag))}</span>'
         for tag in item_tags(item)
     )
 
@@ -583,7 +608,7 @@ def back_to_toc():
 
 
 def builder_card(item):
-    said = item.get("ai_first_value") or translate_zh(item["summary"])[:700]
+    said = ensure_chinese(item.get("ai_first_value") or item["summary"])[:700]
     text = (item["summary"] + " " + item["title"]).lower()
     if any(word in text for word in ("product", "build", "startup", "launch", "用户", "产品")):
         why = "AI 产品正在从概念进入真实用户和商业验证阶段，这条内容能帮助判断需求、定位或发布方式。"
@@ -599,7 +624,7 @@ def builder_card(item):
         f'<div style="margin-top:5px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
         f'<div style="margin-top:7px">{tag_html(item)}</div>'
         f'<div style="margin-top:6px;line-height:1.55"><b>{html.escape(item.get("ai_first_label", "核心观点"))}：</b>{html.escape(said)}</div>'
-        f'<div style="margin-top:6px;line-height:1.55"><b>{html.escape(item.get("ai_second_label", "为什么现在值得注意"))}：</b>{html.escape(item.get("ai_second_value", why))}</div>'
+        f'<div style="margin-top:6px;line-height:1.55"><b>{html.escape(item.get("ai_second_label", "为什么现在值得注意"))}：</b>{html.escape(ensure_chinese(item.get("ai_second_value", why)))}</div>'
         f'{repeat}<div style="margin-top:9px"><a href="{html.escape(item["url"], quote=True)}" '
         'style="color:#2563eb">查看原始内容 →</a></div></div>'
     )
@@ -618,10 +643,10 @@ def editorial_type(item):
 
 def editorial_fields(item):
     if all(item.get(f"ai_{key}") for key in ("first_label", "first_value", "second_label", "second_value")):
-        return ("AI 编辑", item["ai_first_label"], item["ai_first_value"],
-                item["ai_second_label"], item["ai_second_value"])
+        return ("AI 编辑", item["ai_first_label"], ensure_chinese(item["ai_first_value"]),
+                item["ai_second_label"], ensure_chinese(item["ai_second_value"]))
     kind = editorial_type(item)
-    summary = translate_zh(item["summary"][:650] or "原始来源暂未提供简介，建议打开链接查看完整说明。")
+    summary = ensure_chinese(item["summary"][:650] or "原始来源暂未提供简介，建议打开链接查看完整说明。")
     text = (item["title"] + " " + item["summary"]).lower()
     if kind == "product":
         if any(word in text for word in ("cli", "api", "sdk", "python", "framework", "部署")):
@@ -667,7 +692,7 @@ def editorial_card(item, number=None):
 
 
 def compact_link(item):
-    summary = item.get("ai_first_value") or translate_zh(item.get("summary", ""))[:160]
+    summary = ensure_chinese(item.get("ai_first_value") or item.get("summary", ""))[:160]
     return (
         '<div style="padding:10px 0;border-bottom:1px solid #e5e7eb;line-height:1.5">'
         f'{tag_html(item)}<br><a href="{html.escape(item["url"], quote=True)}" '
@@ -687,6 +712,7 @@ def ai_enrich(items):
     prompt_prefix = """你是每日 AI 日报的中文编辑。读者是渴望新知识、但不是本领域教授的大学生。
 只根据输入内容编辑，不补充无法核验的事实。遇到太底层的实现细节，翻译成能力变化、使用场景或现实影响；
 不要堆术语，也不要把读者当初学儿童。不同内容使用不同写法，避免每条都套同一个模板。
+标题可以保留原文；tags、标签名称和所有正文必须使用自然中文，不得返回完整英文句子或英文段落。
 为每条内容返回：
 1. tags：1～3 个明确短 Tag；
 2. first_label、first_value；
