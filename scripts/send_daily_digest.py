@@ -85,9 +85,9 @@ TOPICS = (
 )
 
 
-def fetch(url, accept="text/html,application/json,application/xml"):
+def fetch(url, accept="text/html,application/json,application/xml", timeout=30):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": accept})
-    with urllib.request.urlopen(req, timeout=30) as response:
+    with urllib.request.urlopen(req, timeout=timeout) as response:
         return response.read()
 
 
@@ -143,25 +143,65 @@ def parse_feed_time(value):
             return None
 
 
-def in_current_or_previous_day(published_at, now=None):
-    """Use Beijing calendar days so morning and evening editions share one clear window."""
+def in_recent_days(published_at, days=3, now=None):
+    """Return whether an item falls in the latest Beijing calendar days."""
     if not published_at:
         return False
     now = now or datetime.now(BEIJING)
     local_date = published_at.astimezone(BEIJING).date()
-    return local_date >= (now.date() - timedelta(days=1))
+    return local_date >= (now.date() - timedelta(days=days - 1))
+
+
+def extract_article_text(raw):
+    """Extract likely article copy from ordinary pages and WeChat articles."""
+    page = raw.decode("utf-8", "replace")
+    page = re.sub(r"<(?:script|style|noscript)\b[^>]*>.*?</(?:script|style|noscript)>",
+                  " ", page, flags=re.I | re.S)
+    candidates = []
+    for pattern in (
+        r'<div\b[^>]*\bid=["\']js_content["\'][^>]*>(.*?)</div>\s*(?:<script|<div[^>]+id=["\']js)',
+        r"<article\b[^>]*>(.*?)</article>",
+        r"<main\b[^>]*>(.*?)</main>",
+    ):
+        candidates.extend(clean(match) for match in re.findall(pattern, page, re.I | re.S))
+    candidates = [text for text in candidates if len(text) >= 200]
+    return max(candidates, key=len)[:6000] if candidates else ""
+
+
+def hydrate_editorial_articles(items):
+    """Replace RSS teasers with article copy, using short concurrent requests."""
+    targets = [
+        item for item in items
+        if item.get("daily_scope") and item.get("source_class")
+    ]
+
+    def read_article(item):
+        try:
+            return item, extract_article_text(fetch(item["url"], timeout=10))
+        except Exception:
+            return item, ""
+
+    with ThreadPoolExecutor(max_workers=min(6, len(targets) or 1)) as executor:
+        for item, article_text in executor.map(read_article, targets):
+            if len(article_text) > len(item.get("summary", "")) + 100:
+                item["summary"] = article_text
+                item["full_text"] = True
+            item["weak_summary"] = (
+                not item.get("full_text")
+                and len(item.get("summary", "")) < 120
+            )
 
 
 def editorial_feeds():
-    """Read every available feed article from today/yesterday, plus a 14-day fallback pool."""
+    """Read every available feed article from the latest three Beijing calendar days."""
     now = datetime.now(UTC)
     result, errors = [], []
     for source, (url, source_class, authority) in EDITORIAL_FEEDS.items():
         try:
             root = ET.fromstring(fetch(url, "application/rss+xml,application/atom+xml,text/xml"))
             entries = [node for node in root.iter() if node.tag.rsplit("}", 1)[-1] in ("item", "entry")]
-            # Do not cap before date filtering: busy sources may publish more than 20
-            # articles across the two calendar days that readers asked us to cover.
+            # Do not cap before filtering: busy sources may publish many articles
+            # during the three-day window.
             for entry in entries:
                 fields = {}
                 links = []
@@ -179,7 +219,7 @@ def editorial_feeds():
                 published_at = parse_feed_time(published)
                 if not title or not url_value:
                     continue
-                if published_at and now - published_at.astimezone(ZoneInfo("UTC")) > timedelta(days=14):
+                if published_at and not in_recent_days(published_at, 3, now.astimezone(BEIJING)):
                     continue
                 result.append({
                     "source": source,
@@ -189,10 +229,11 @@ def editorial_feeds():
                     "summary": summary[:1200] or "原始来源未提供摘要，请打开原文查看。",
                     "score": authority,
                     "created_at": published,
-                    "daily_scope": in_current_or_previous_day(published_at),
+                    "daily_scope": in_recent_days(published_at, 3),
                 })
         except Exception as exc:
             errors.append(f"{source}: {type(exc).__name__}: {exc}")
+    hydrate_editorial_articles(result)
     return result, errors
 
 
@@ -427,7 +468,7 @@ def follow_builders():
                             "summary": text,
                             "created_at": post.get("createdAt", ""),
                             "score": engagement,
-                            "daily_scope": in_current_or_previous_day(
+                            "daily_scope": in_recent_days(
                                 parse_feed_time(post.get("createdAt", ""))
                             ),
                         })
@@ -455,7 +496,7 @@ def follow_builders():
                             "created_at": entry.get("publishedAt") or entry.get("published")
                                           or entry.get("date") or "",
                             "score": 200,
-                            "daily_scope": in_current_or_previous_day(parse_feed_time(
+                            "daily_scope": in_recent_days(parse_feed_time(
                                 entry.get("publishedAt") or entry.get("published")
                                 or entry.get("date") or ""
                             )),
@@ -687,6 +728,8 @@ def editorial_card(item, number=None):
         f'<div style="margin-top:7px">{tag_html(item)}</div>'
         f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{first_label}：</b>{html.escape(first_value)}</div>'
         f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{second_label}：</b>{html.escape(second_value)}</div>'
+        f'<div style="margin-top:8px"><a href="{html.escape(item["url"], quote=True)}" '
+        'style="color:#2563eb;text-decoration:none">阅读原文 →</a></div>'
         "</div>"
     )
 
@@ -732,7 +775,7 @@ def ai_enrich(items):
             "id": start + index,
             "source": item["source"],
             "title": item["title"],
-            "summary": item["summary"][:1200],
+            "summary": item["summary"][:2400],
             "kind": item.get("kind", ""),
             "published_at": item.get("created_at", ""),
         } for index, item in enumerate(batch)]
@@ -791,7 +834,7 @@ def render(items, errors):
         parse_time(x.get("created_at")),
     ), reverse=True)
     highlights, source_counts = [], {}
-    for item in authority:
+    for item in (x for x in authority if not x.get("weak_summary")):
         if source_counts.get(item["source"], 0) >= 1:
             continue
         highlights.append(item)
@@ -799,11 +842,12 @@ def render(items, errors):
         if len(highlights) == 4:
             break
     if len(highlights) < 4:
-        highlights += [x for x in authority if x not in highlights][:4 - len(highlights)]
+        highlights += [x for x in authority if x not in highlights and not x.get("weak_summary")][:4 - len(highlights)]
     highlight_urls = {x["url"] for x in highlights}
     authoritative_more, source_counts = [], {}
     for item in authority:
-        if item["url"] in highlight_urls or source_counts.get(item["source"], 0) >= 2:
+        if (item["url"] in highlight_urls or item.get("weak_summary")
+                or source_counts.get(item["source"], 0) >= 2):
             continue
         authoritative_more.append(item)
         source_counts[item["source"]] = source_counts.get(item["source"], 0) + 1
@@ -829,8 +873,8 @@ def render(items, errors):
                  and x["source"] != "独立开发者新品"
                  and x["source"] not in original_sources and
                  (x["source"] != "AI 人物与观点" or len(x.get("summary", "")) >= 120)]
-    # Never omit today/yesterday's feed articles. Older fallback items are capped
-    # so a quiet day still has useful context without turning into an archive dump.
+    # Keep the latest three days complete; older non-editorial fallback items are
+    # capped so the digest never turns into an archive dump.
     recent_more = [x for x in remaining if x.get("daily_scope")]
     older_more = [x for x in remaining if not x.get("daily_scope")]
     more = sorted(recent_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)
@@ -849,7 +893,7 @@ def render(items, errors):
 <div style="max-width:760px;margin:auto;background:white;padding:20px">
 <a id="top" name="top"></a><h1 style="font-size:24px;margin:0 0 8px">每日 AI 日报 · {edition}</h1>
 <p style="color:#6b7280;margin:4px 0">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条候选，已全局去重</p>
-<p style="color:#475569;line-height:1.55;margin:8px 0">完整读取当天与前一天的来源条目；重要内容展开，技术细节转译为大学生容易理解的能力、场景与影响，其余保留为速览。</p>
+<p style="color:#475569;line-height:1.55;margin:8px 0">只读取最近三个自然日的来源条目；重点文章先读取正文再提炼结论，技术细节转译为大学生容易理解的能力、场景与影响。</p>
 <div id="toc" style="padding:11px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:12px 0">
 <b>目录</b>
 <div style="margin-top:6px;line-height:1.75">
@@ -885,7 +929,7 @@ def render(items, errors):
 {''.join(editorial_card(x, i) for i, x in enumerate(tech, 1))}
 </div>
 <a id="more" name="more"></a><h2 style="font-size:19px">五、更多资讯</h2>{back_to_toc()}
-<p style="color:#64748b">当天与前一天未进入重点区的内容全部保留，并标明来源、时间和原文链接。</p>
+<p style="color:#64748b">最近三天未进入重点区的内容保留为速览，并标明来源、时间和原文链接。</p>
 {''.join(compact_link(x) for x in more)}
 <a id="apps" name="apps"></a>
 <div style="padding:14px;background:#f0fdf4;border-radius:8px;margin:16px 0">
