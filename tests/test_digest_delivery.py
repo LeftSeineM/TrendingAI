@@ -69,6 +69,19 @@ class DeliveryTests(unittest.TestCase):
             self.assertIn(item["url"], anchors)
             self.assertEqual(1, len(json.loads((Path(tmp) / "archive.json").read_text(encoding="utf-8"))))
 
+    def test_editorial_prompt_prioritizes_reader_value(self):
+        prompt = digest.EDITORIAL_PROMPT
+        self.assertIn("跑分只是支持判断的证据，不是结论", prompt)
+        self.assertIn("格式不必死板", prompt)
+        self.assertIn("学习、工作、创作、消费、求职", prompt)
+        self.assertIn("不能等同于现有产品体验", prompt)
+
+    def test_pages_redeploy_after_digest_workflow(self):
+        workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_run:", workflow)
+        self.assertIn('workflows: ["TrendingAI Daily Email"]', workflow)
+        self.assertIn("workflow_run.conclusion == 'success'", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
