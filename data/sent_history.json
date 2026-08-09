@@ -1,180 +1,5 @@
 [
   {
-    "url_hash": "c145250d2aa50ecd9a15",
-    "title_key": "goboardcast",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "9836d8c16e3a864e72cb",
-    "title_key": "紫微玄鉴",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "15f3203952972676a478",
-    "title_key": "halo音乐广场",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "60d2e5eea80421a1c92d",
-    "title_key": "investigatingthreerealworldincidentsinourcybersecurityevaluations",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "5b37cc1e046a431cf984",
-    "title_key": "quotingbruceschneier",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "8092aab2129d447ecb60",
-    "title_key": "ai开始给自己写代码了gpt56重写内核服务成本直降20",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "ae4c6f9248c31fb4e9b0",
-    "title_key": "模型变强没有用创作仍然碎片化面向长程多模态创作的开放式harness",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "f4c259ee8ebed9f93834",
-    "title_key": "新智元火到硅谷了vc大佬走访中国实验室爆料长文连夜刷屏",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "a3cb71565eca27ab3f7f",
-    "title_key": "showhnkedgefullstackcloudwithforkablevmsnapshotsandglobalsqlite",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "363aaf17512187a755ff",
-    "title_key": "showhndistillingdeepseekintogptossdoesnttransfercensorshiptryit",
-    "sent_at": "2026-07-31T00:34:27.868284+00:00"
-  },
-  {
-    "url_hash": "c2430e254b0f7622abc0",
-    "title_key": "guillermorauch",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "b43d4b04be737014e436",
-    "title_key": "joshwoodward",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "74006bbf8ceb4ce34d6c",
-    "title_key": "thesessionyoucannottakewithyou",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "7132612e8cf704416966",
-    "title_key": "theaiaesthetic",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "8f8555b73e1b42928d84",
-    "title_key": "deepseekv4flashupdate",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "3138c8a9269a2ea4aefc",
-    "title_key": "iflaggedtworesearchpapersforfakeauthorsandbothwereacceptedasorals",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "54bedf41a5fdd64a5b4d",
-    "title_key": "thereligionofspeed",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "8a535a273ff1fd6ec198",
-    "title_key": "jep401valueobjectspreviewmergedtoopenjdkmaster",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "93ed212a2a4b92bd9737",
-    "title_key": "badapplebutitstraceroute",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "da425c76a8c018d071b2",
-    "title_key": "howavatarinbuilta247retailagentwithgptrealtime",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "f8ec64126bdac17b3b31",
-    "title_key": "advancingresponsibleaiacrosseurope",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "cd88270c00622dafecb0",
-    "title_key": "univébuildsanaireadyworkforce",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "44a2aba1fa21e8e85ada",
-    "title_key": "eccv2026北大团队提出agenthoi不用一张hoi标注图大模型也能看懂谁在对什么做什么",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "762be556f846d3e0ccda",
-    "title_key": "0人公司能赚钱吗他们让gpt自己经营24小时亏损447美元",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "5ab718f527125be7f965",
-    "title_key": "李飞飞simfoundry很酷但real2sim有更多办法",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "6b91f055fc617fad8cbf",
-    "title_key": "workbuddy的这个新功能我觉得就是agent时代的office",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "7acc616593778e942b41",
-    "title_key": "minimaxh3还要开源ai视频终于有了自己的后期之王",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "a3244bcc50a6f615e96b",
-    "title_key": "googlefixedmorechromebugsinjunethanoverthepasttwoyearsthankstoai",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "4d7bef17cf6e8e88f998",
-    "title_key": "rune11addspythonanemacseditorasymbolindexandisnowfree",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "dd2193207de8a9ef8954",
-    "title_key": "memo1a6502computerbuiltfromscratchusingaminitelasitsterminal",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "e729ac761127f6daad85",
-    "title_key": "mattturck",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "82162218ece9ce1d5152",
-    "title_key": "witr",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "b97ff01b3f7b1ba071e6",
-    "title_key": "cleanlistai",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "6b1e949ec43295417f41",
-    "title_key": "mubertapi",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
-    "url_hash": "b437491b906555e52f38",
-    "title_key": "mectrics",
-    "sent_at": "2026-07-31T10:33:17.190064+00:00"
-  },
-  {
     "url_hash": "400ccc2bb634a1a8f3d9",
     "title_key": "minimaxh3",
     "sent_at": "2026-07-31T10:33:17.190064+00:00"
@@ -2998,5 +2823,180 @@
     "url_hash": "4a40a5c604ce06eaafb9",
     "title_key": "buildingalocalpositioningsystemtotrackrunnersusingultrawideband",
     "sent_at": "2026-08-09T01:35:41.142830+00:00"
+  },
+  {
+    "url_hash": "c42ff737d823b13d3c29",
+    "title_key": "zarazhang",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "67aca35d178b0c8dbf66",
+    "title_key": "ditheredqrcodes",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "e331d101bf80fccfa037",
+    "title_key": "shopifyreplacedrediswithmysqlforinventoryreservationsanditscaled",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "ca10c0d1e9cfbe9e4ac1",
+    "title_key": "retractiontheappstorerejectionoftheweekthatwasacorrectrejection",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "c1b65505c504b9c8a325",
+    "title_key": "os8088apowerfulmaclikeosfortheibmxt286386",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "3320dbefa565738cfeba",
+    "title_key": "theoriginalurlforthispredictionwillnolongerbeavailablein11years2011",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "c75ac87284b3b143595c",
+    "title_key": "melatoninimpairsmorningcognitioninhealthyyoungadults2023",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "a01041fffb6e0b275ee8",
+    "title_key": "incentivesareforlosers",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "025a3f6b0ac55746de5d",
+    "title_key": "anthropicceo急了新人都是冲钱来的ai巨头最大危机不是算力是留人",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "dcb7bef1f090dbcdebe2",
+    "title_key": "文科生也能拿百万大奖科目三脱口秀全网整活智元灵创创意大赛来了",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "8363b49e67c6a176cd20",
+    "title_key": "gemini凉了创始人布林杀回ai一线谷歌人心惶惶",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "1c67a99d1e4913e745bd",
+    "title_key": "大模型后训练破解多模态分布性遗忘7b模型七项基准全线提升",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "4492ecfa9decb219167d",
+    "title_key": "硅谷万亿ai帝国ceo竟是双面末日教主",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "ba8c052a66bf23c457ea",
+    "title_key": "microsoftwordforwindows11anativex64port",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "77022d8652fd65017251",
+    "title_key": "unexpectedeventsandprosocialbehaviorthebatmaneffect2025",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "29a47cb353a90886df1a",
+    "title_key": "shouldyoustopcrackingyourknuckles",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "8e4a803a5c0b598ec369",
+    "title_key": "findingzombiesinoursystemsarealworldstoryofcpubottlenecks",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "5213ab9e411ed1fd79f1",
+    "title_key": "omniwork",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "c08ec2b468a48f442b32",
+    "title_key": "docsalotcli",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "646ab07ae2a506b7b0e7",
+    "title_key": "persodex",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "c033c1a33c77f41392fb",
+    "title_key": "solouno",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "a9d16677b9f2cec45b1f",
+    "title_key": "proxytesterbyscrapeops",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "5f2ecd70a6c2c0024ebc",
+    "title_key": "grokimagine20",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "b7637720391a354ed0b1",
+    "title_key": "workflo",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "0f7bfa2fa1d2587b6b25",
+    "title_key": "duckdisk",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "71f4f66b6c923c0ff3e9",
+    "title_key": "papaya",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "68c271355a57d6a520aa",
+    "title_key": "macrobite",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "a0e447088a47f35e6f0d",
+    "title_key": "argos",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "02bbe8857b762beaada2",
+    "title_key": "soupcli",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "3cd209c2495655db752f",
+    "title_key": "radiushq",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "69a740294a9922add7e3",
+    "title_key": "agentconnect",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "f5c9cf76033b298542e1",
+    "title_key": "goodassistant2",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "2b92ac9aad7ade771d18",
+    "title_key": "conferencegrid",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "47126215b3313b4442d7",
+    "title_key": "promptgolf",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
+  },
+  {
+    "url_hash": "b04665fbf26123c86194",
+    "title_key": "voiceosappstore",
+    "sent_at": "2026-08-09T10:38:08.770441+00:00"
   }
 ]
