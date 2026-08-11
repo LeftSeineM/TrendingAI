@@ -1,200 +1,5 @@
 [
   {
-    "url_hash": "98591552d6882ee08226",
-    "title_key": "ramenhaus",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "82fb15e902249729d28b",
-    "title_key": "cjksaaslocalizationqapack",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "d3a01a7e64051ac3d024",
-    "title_key": "jarvishub让创作agent走出聊天框面向长程多模态创作的开源画布原生harness",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "71eab136093ea8687ebb",
-    "title_key": "刚刚openai全新模型astra曝光",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "5ccba2cc8dc685831a53",
-    "title_key": "一台mac也能跑kimik3128gb内存硬塞16tb权重",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "ba267b16bca1c2d21629",
-    "title_key": "githubghstack",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "658cf3ee8df6583ce537",
-    "title_key": "nomadamaskskill",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "7e01176c9d1442c27f9d",
-    "title_key": "abusaikoreavoicepro",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "e21d88dcfc54305062e1",
-    "title_key": "kopai",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "b0faea96c10514aa51a5",
-    "title_key": "terminalwidget",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "5dc729f6dc5eba661ba2",
-    "title_key": "syncstaq",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "39f8db1e43bf46107821",
-    "title_key": "nudgeforme",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "bd5591870fb0ad76a141",
-    "title_key": "terminalcandy",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "0b4aa53de31d55cbdae4",
-    "title_key": "agentmicro",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "127639cc62d76a80ea31",
-    "title_key": "basedashauditlogs",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "6d8748c9972db38d8808",
-    "title_key": "essaykraft",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "0b4fb2527d1b3f7f3179",
-    "title_key": "yamanote3d",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "ec41ed513c00aeed37be",
-    "title_key": "port22",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "acfc72f96a0538d8160f",
-    "title_key": "tandem",
-    "sent_at": "2026-08-01T11:18:51.463977+00:00"
-  },
-  {
-    "url_hash": "38813d91760aee987da6",
-    "title_key": "howgooglehelpeddestroyadoptionofrssfeeds2023",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "9e9238cf0bbd920f9137",
-    "title_key": "ripgrepmuslbinariesoccasionallysegfaultduringverylargesearches",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "ca741c1b46d0615e7fa4",
-    "title_key": "netbsd110",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "bc643784e33ed657fd19",
-    "title_key": "diátaxis",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "4b545b2b5757aaf1c936",
-    "title_key": "theartof64bitassembly",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "0d78e02a307de63f7fdd",
-    "title_key": "aifinancialadviceissurprisinglygoodespeciallyifyouaskrightquestions",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "7d1962282017eb939435",
-    "title_key": "postmortemforkernelsoundnessbug14576",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "c091b3a143016e329d06",
-    "title_key": "animeuserinterfaces",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "e155c37f3ac4ecb0be6b",
-    "title_key": "kenjiseriouseats30minpressurecookerphoga",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "681c59411c6fb668a0de",
-    "title_key": "linuxonesp32",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "69a997c4905f89fffba8",
-    "title_key": "nanogpt",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "46694f23a8b75db400b0",
-    "title_key": "bazicalculator",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "bef6dc7431af92a966f2",
-    "title_key": "反应测试",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "0402f1a304ed618578c5",
-    "title_key": "kavel",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "0ac685b1a7639af3fc90",
-    "title_key": "quotinggregbrockman",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "03178962ffac9cef0ace",
-    "title_key": "openai全球用户破10亿全新模型astra曝光疑似gpt6",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "649dd1ee554ed544bf72",
-    "title_key": "哈佛华人教授尹希首谈gpt56",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "5ece1426e34b40aa6f36",
-    "title_key": "超过1b参数都是浪费多模态情感模型进入小时代acmmm26",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "258d6d901c45ffdaefe6",
-    "title_key": "cisaalertwatersectorplctargeting",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
-    "url_hash": "e8fc34474770db73c526",
-    "title_key": "explorativemodelingtrainonthebestofkguesses",
-    "sent_at": "2026-08-02T02:56:47.470477+00:00"
-  },
-  {
     "url_hash": "b679a885b964e9898a0d",
     "title_key": "butcanyourcalculatorrunlinux",
     "sent_at": "2026-08-02T02:56:47.470477+00:00"
@@ -2998,5 +2803,200 @@
     "url_hash": "b7b396d7d77d1f8e6d6d",
     "title_key": "portfoliolab",
     "sent_at": "2026-08-10T10:33:32.291726+00:00"
+  },
+  {
+    "url_hash": "7c4c5b27f76a03627b7f",
+    "title_key": "museglimmer30bparametermodeloptimizedforalwaysonlocalagentworkflows",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "e9dbf459bd01dca31193",
+    "title_key": "firecrawlfirecrawl",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "b4c0bfda42fcfc7c702f",
+    "title_key": "markzuckerbergattacksclosedairivalsasmetareturnstoopenmodels",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "64af69cbf3da395d34b2",
+    "title_key": "sponsorsdanielmiessler",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "4ed56b096b2925c3f9c7",
+    "title_key": "sonicpiv5",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "14cee0359b3d1ca7bc75",
+    "title_key": "sponsorsnanmicoder",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "75d7b64496bd86368f68",
+    "title_key": "squeak61",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "a5e43b1572bfaf36e264",
+    "title_key": "paperclipaipaperclip",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "000c52f2ce947fb40d2a",
+    "title_key": "parametron50sjapanesecomputerthatusesneithertransistorsnorvacuumtubes",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "d7dddac5c9c6043e7c06",
+    "title_key": "showhnneedle214mbagenticllmforphoneswearablessmarthomeandrobots",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "8b56f91e6ea5236819e1",
+    "title_key": "theukswaronanonymityhascometoamerica",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "2774067c709116251c4e",
+    "title_key": "magnitude74earthquake5kmsofsanjosédelpalmarcolombia",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "cdad6239349fec44f7cf",
+    "title_key": "stopkillinggamesitstimetosuesonyjoinus",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "b303b1e4141446e667c0",
+    "title_key": "ruvnetruview",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "518ffd2b0cf34d32ed9f",
+    "title_key": "humanisingllmoutputsisdumb",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "2e27beacedfb551c5a66",
+    "title_key": "50kboatnames",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "77d4093e357af471db77",
+    "title_key": "exploitingsystemmanagementmodewithaverylonginterrupt",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "75cf71b224889489f5d9",
+    "title_key": "tailcalloptimizationincisrelativelyrecent2025",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "40d777ce10dae1fd187d",
+    "title_key": "rustsimdonthegpu",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "06e7ef0f9e1f89897ba6",
+    "title_key": "stowawaytakethewindowseatonanyplaneorsatelliteoverhead",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "99438874795bf1b71ea5",
+    "title_key": "opa334dopamine",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "263edb3aa647ab7310f5",
+    "title_key": "exploringclaudegptknowledgecutoffsandpretrainingtimelines",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "3d196224ab27a2df369c",
+    "title_key": "openaislettertogovernorabbottonresponsibleaiinfrastructureintexas",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "081601c279be28d3ef5a",
+    "title_key": "expandingdaybreakasthecyberdefensewindownarrows",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "2a5c0cad5d8b2f9d8e4a",
+    "title_key": "premiumseatsarecomingtochatgptbusiness",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "6476741ad7bd8e8e5ea0",
+    "title_key": "howzapiertransformedcoremarketingprocesseswithchatgptwork",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "0e82d8998833621ad9c9",
+    "title_key": "virginatlanticsharpenscustomerjourneyswithchatgptwork",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "5367cc95a8fd98172eb1",
+    "title_key": "whatbuildinganainativefinancefunctiontaughtme",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "95f74aeac90a93bb12ce",
+    "title_key": "modelmlcompletesfinanceworkmoreefficientlywithgpt56sol",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "29b0e61ec6cd1ed38342",
+    "title_key": "puttingfrontiercybermodelsinmoretrustedhands",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "5890b1cfd4cc38aa3885",
+    "title_key": "buildlowlatencymultilingualvoiceagentsopenweightsfulldeploymentcontrolwithnvidiamagpietts",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "dfb586131bf3d3cb04b4",
+    "title_key": "metaisbackwithmuseglimmerlocalagenticmultimodalandopensource",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "c60b75d4c49e5375c4e0",
+    "title_key": "introducingmuseglimmer",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "e76454589859d7df9b98",
+    "title_key": "我花了54个小时做了一个可能更公平的ai大模型排行榜",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "fd4439e619cbf5aa91c7",
+    "title_key": "刚刚openai曝光gpt6传10万亿参数8月强行",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "f9de9b8b3f98b69303be",
+    "title_key": "奥特曼笑疯claudecode之父挖角openai网红高管惨遭秒拒",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "ff93693dd543e2f71c0a",
+    "title_key": "lstm之父97页综述agent如何真正学会自我进化",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "5609870a3357c3b7b607",
+    "title_key": "thepsychedelictoadofthesonorandesert",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
+  },
+  {
+    "url_hash": "6905eeba9a79907d9cb0",
+    "title_key": "publishingschematicsbeforeopensourcewasaword",
+    "sent_at": "2026-08-11T01:53:11.902024+00:00"
   }
 ]
