@@ -780,6 +780,7 @@ EDITORIAL_PROMPT = """你是《每日 AI 日报》的主编，而不是摘要生
 4. 把专业概念翻译成具体场景：它可能改变谁的哪一步工作，节省什么，增加什么限制，或让哪件以前很难的事变得可行。
 5. 区分“现在就能使用”“正在测试”“研究结果”和“未来信号”。尚未落地的内容不得写成已经可用。
 6. 如果素材不足以支持有价值的解读，诚实说明目前能确认到哪里，不要用空泛判断补齐篇幅。
+7. 这不是“资讯清单”。宁可只保留一句有用的事实，也不要把原始抓取文本、社交媒体口号、榜单热度或无关评论改写成长段正文。
 
 【不同素材怎么写】
 - 产品或应用：优先写它能替读者完成什么任务、替代哪种繁琐做法，以及真实使用门槛，如是否要安装、付费、懂代码、上传隐私数据。不要把功能列表逐项抄写。
@@ -805,6 +806,8 @@ EDITORIAL_PROMPT = """你是《每日 AI 日报》的主编，而不是摘要生
 - 可以给出克制的编辑判断，但必须能由输入事实支持。不要反复使用“目前更像一个行业信号”“长期影响要看后续采用”“值得持续关注”等万能句。
 - 不要把每条都写成“它是什么、为什么值得看、适合谁”的流水账。没有实际意义的栏目可以省略，由两个灵活标签承载真正重要的信息。
 - 不在正文中裸露 URL，链接由排版程序单独加入。
+- 如果输入只是“在某个平台获得多少票 / 多少讨论”，没有原始事件或文章摘要，请不要为该项输出内容；它不应进入日报正文。
+- 不要复用“目前更像一个行业信号”“值得持续关注”“普通用户会逐步感受到变化”等句式。没有具体、可验证的影响时，直接说明“现有信息不足以判断实际影响”。
 
 【质量对照】
 不合格：某模型在基准测试中获得 92.3 分，性能显著提升，值得关注。
@@ -833,22 +836,38 @@ def ai_enrich(items):
     if not (api_key and base_url and model and items):
         return
     prompt_prefix = EDITORIAL_PROMPT
-    # Batch the whole candidate set. A small worker pool keeps complete coverage
-    # practical without making the workflow wait for every request sequentially.
+    # A previous version sent up to twelve long articles in one request. Flash
+    # models often timed out or returned incomplete JSON, after which the digest
+    # silently fell back to boilerplate. Small editorial batches make a complete
+    # piece of copy much more reliable than a large summarisation job.
+    batch_size = 4
+    failures = []
+
+    def usable_copy(value):
+        value = clean(str(value or ""))
+        han_count = len(re.findall(r"[\u4e00-\u9fff]", value))
+        banned = ("中文摘要暂时生成失败", "目前更像一个行业信号", "值得持续关注")
+        return han_count >= 18 and not any(phrase in value for phrase in banned)
+
     def edit_batch(start):
-        batch = items[start:start + 12]
+        batch = items[start:start + batch_size]
         payload_items = [{
             "id": start + index,
             "source": item["source"],
             "title": item["title"],
-            "summary": item["summary"][:2400],
+            "summary": item["summary"][:1600],
             "kind": item.get("kind", ""),
             "published_at": item.get("created_at", ""),
         } for index, item in enumerate(batch)]
         request_body = json.dumps({
             "model": model,
-            "messages": [{"role": "user", "content": prompt_prefix + json.dumps(payload_items, ensure_ascii=False)}],
-            "temperature": 0.2,
+            "messages": [
+                {"role": "system", "content": "你是一位谨慎、具体、会删掉无价值内容的中文科技主编。"},
+                {"role": "user", "content": prompt_prefix + json.dumps(payload_items, ensure_ascii=False)},
+            ],
+            "temperature": 0.35,
+            "max_tokens": 2600,
+            "response_format": {"type": "json_object"},
         }, ensure_ascii=False).encode("utf-8")
         request = urllib.request.Request(
             f"{base_url}/chat/completions",
@@ -857,7 +876,7 @@ def ai_enrich(items):
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=45) as response:
+            with urllib.request.urlopen(request, timeout=90) as response:
                 result = json.loads(response.read().decode("utf-8"))
             content = result["choices"][0]["message"]["content"]
             content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip(), flags=re.I)
@@ -866,10 +885,11 @@ def ai_enrich(items):
             if not isinstance(rows, list):
                 return []
             return rows
-        except Exception:
+        except Exception as exc:
+            failures.append(type(exc).__name__)
             return []
 
-    starts = list(range(0, len(items), 12))
+    starts = list(range(0, len(items), batch_size))
     with ThreadPoolExecutor(max_workers=min(3, len(starts))) as executor:
         futures = {executor.submit(edit_batch, start): start for start in starts}
         for future in as_completed(futures):
@@ -882,18 +902,43 @@ def ai_enrich(items):
                 if not isinstance(index, int) or not 0 <= index < len(items):
                     continue
                 tags = row.get("tags")
+                values = {key: clean(str(row.get(key, ""))) for key in
+                          ("first_label", "first_value", "second_label", "second_value")}
+                # Do not let a half-finished JSON response overwrite the stable
+                # fallback copy. An item only becomes AI-edited when both ideas
+                # read like complete Chinese sentences.
+                if not (usable_copy(values["first_value"]) and usable_copy(values["second_value"]) and
+                        values["first_label"] and values["second_label"]):
+                    continue
                 if isinstance(tags, list):
                     items[index]["ai_tags"] = [clean(str(tag))[:16] for tag in tags[:3] if clean(str(tag))]
-                for key in ("first_label", "first_value", "second_label", "second_value"):
-                    value = clean(str(row.get(key, "")))
-                    if value:
-                        items[index][f"ai_{key}"] = value[:500]
+                for key, value in values.items():
+                    items[index][f"ai_{key}"] = value[:500]
+    edited = sum(all(item.get(f"ai_{key}") for key in
+                     ("first_label", "first_value", "second_label", "second_value")) for item in items)
+    print(f"AI_EDITORIAL edited={edited}/{len(items)} failed_batches={len(failures)}")
+
+
+def low_signal_item(item):
+    """Discard items that cannot support a useful reader-facing paragraph."""
+    summary = clean(item.get("summary", ""))
+    if item.get("weak_summary") or "中文摘要暂时生成失败" in summary:
+        return True
+    if item.get("source") == "Hacker News" and summary.startswith("这条内容在 Hacker News 获得"):
+        return True
+    if len(summary) < 55:
+        return True
+    return False
 
 
 def render(items, errors, now=None, enrich=True, page_url="", edition_override=None):
     now = now or datetime.now(BEIJING)
     edition = edition_override or ("上午篇" if now.hour < 18 else "下午篇")
-    authority = [x for x in items if x.get("source_class") in ("官方", "专业媒体", "个人作者")]
+    # A good daily is an edited selection, not a three-day crawl rendered in
+    # full. Low-signal entries are still available at their source, but do not
+    # earn space in a reader's inbox merely because they were easy to fetch.
+    usable_items = [x for x in items if not low_signal_item(x)]
+    authority = [x for x in usable_items if x.get("source_class") in ("官方", "专业媒体", "个人作者")]
     authority.sort(key=lambda x: (
         1 if x.get("daily_scope") else 0,
         x.get("score", 0),
@@ -920,22 +965,23 @@ def render(items, errors, now=None, enrich=True, page_url="", edition_override=N
         if len(authoritative_more) == 5:
             break
     used_urls = highlight_urls | {x["url"] for x in authoritative_more}
-    indie_all = [x for x in items if x["source"] == "独立开发者新品"]
+    indie_all = [x for x in usable_items if x["source"] == "独立开发者新品"][:5]
     indie = indie_all[:3]
     used_urls |= {x["url"] for x in indie_all}
-    builders = [x for x in select_builder_items(items, now) if x["url"] not in used_urls][:3]
+    builders = [x for x in select_builder_items(usable_items, now) if x["url"] not in used_urls
+                and not low_signal_item(x)][:3]
     used_urls |= {x["url"] for x in builders}
-    discovered = [x for x in items if x["url"] not in used_urls and not x.get("source_class")
+    discovered = [x for x in usable_items if x["url"] not in used_urls and not x.get("source_class")
                   and x["source"] not in ("独立开发者新品", "AI 人物与观点")]
     tech = sorted(discovered, key=rank, reverse=True)[:4]
     used_urls |= {x["url"] for x in tech}
     original_sources = ("GitHub Trending", "Hacker News", "Product Hunt", "关注项目 · Scrapling")
     trend_latest = sorted(
-        [x for x in items if x["source"] in original_sources and x["url"] not in used_urls],
+        [x for x in usable_items if x["source"] in original_sources and x["url"] not in used_urls],
         key=lambda x: (parse_time(x.get("created_at")), x.get("score", 0)), reverse=True,
-    )
+    )[:6]
     used_urls |= {x["url"] for x in trend_latest}
-    remaining = [x for x in items if x["url"] not in used_urls
+    remaining = [x for x in usable_items if x["url"] not in used_urls
                  and x["source"] != "独立开发者新品"
                  and x["source"] not in original_sources and
                  (x["source"] != "AI 人物与观点" or len(x.get("summary", "")) >= 120)]
@@ -943,8 +989,8 @@ def render(items, errors, now=None, enrich=True, page_url="", edition_override=N
     # capped so the digest never turns into an archive dump.
     recent_more = [x for x in remaining if x.get("daily_scope")]
     older_more = [x for x in remaining if not x.get("daily_scope")]
-    more = sorted(recent_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)
-    more += sorted(older_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:8]
+    more = sorted(recent_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:10]
+    more += sorted(older_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:4]
     indie_more = indie_all[3:]
     selected, selected_urls = [], set()
     for item in highlights + authoritative_more + indie_all + builders + tech + more + trend_latest:
