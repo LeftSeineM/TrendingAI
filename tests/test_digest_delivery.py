@@ -75,6 +75,13 @@ class DeliveryTests(unittest.TestCase):
         self.assertIn("格式不必死板", prompt)
         self.assertIn("学习、工作、创作、消费、求职", prompt)
         self.assertIn("不能等同于现有产品体验", prompt)
+        self.assertIn("资讯清单", prompt)
+
+    def test_low_signal_heat_only_items_do_not_enter_copy(self):
+        item = {"source": "Hacker News", "summary": "这条内容在 Hacker News 获得 665 分，并有 256 条讨论。"}
+        self.assertTrue(digest.low_signal_item(item))
+        strong = {"source": "官方", "summary": "该工具会把会议录音整理为带时间戳的行动项，并允许团队成员继续追问和补充；使用前仍需确认录音授权、语言支持和数据保留方式。"}
+        self.assertFalse(digest.low_signal_item(strong))
 
     def test_pages_redeploy_after_digest_workflow(self):
         workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
