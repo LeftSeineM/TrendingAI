@@ -1,6 +1,11 @@
 [
   {
     "date": "2026-08-20",
+    "edition": "下午篇",
+    "file": "2026-08-20-evening.html"
+  },
+  {
+    "date": "2026-08-20",
     "edition": "上午篇",
     "file": "2026-08-20-morning.html"
   },
