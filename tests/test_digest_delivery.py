@@ -60,14 +60,26 @@ class DeliveryTests(unittest.TestCase):
             url, anchors = site.render_site([item], [], datetime(2026, 7, 30, 8, tzinfo=ZoneInfo("Asia/Shanghai")),
                                             "morning", "上午篇", tmp, "https://example.test/daily", funcs)
             page = (Path(tmp) / "index.html").read_text(encoding="utf-8")
-            self.assertIn("历史日报归档", page)
+            self.assertIn("今天的 AI，先读这三件事", page)
+            self.assertIn("完整资料库", page)
+            self.assertIn("历史日报", page)
             self.assertIn("全部来源", page)
-            self.assertIn("阅读原文", page)
+            self.assertIn("打开原文", page)
             self.assertIn("测试文章", page)
             self.assertIn("下午篇尚未生成", page)
             self.assertTrue(url.endswith("2026-07-30-morning.html"))
             self.assertIn(item["url"], anchors)
             self.assertEqual(1, len(json.loads((Path(tmp) / "archive.json").read_text(encoding="utf-8"))))
+
+    def test_email_has_a_short_reading_path_instead_of_seven_sections(self):
+        base = {"source_class": "官方", "summary": "这是一段足够完整的中文摘要，用来说明一项能力发生了什么变化，以及它在真实工作中的具体作用和仍然存在的限制。",
+                "created_at": "2026-07-30T00:00:00Z", "daily_scope": True, "score": 90}
+        items = [{**base, "source": f"官方来源{i}", "title": f"重点资讯{i}", "url": f"https://example.com/{i}"} for i in range(4)]
+        _, body = digest.render(items, [], datetime(2026, 7, 30, 8, tzinfo=ZoneInfo("Asia/Shanghai")), enrich=False)
+        self.assertIn("今日阅读路线", body)
+        self.assertIn("今天最值得知道", body)
+        self.assertIn("其余速览", body)
+        self.assertNotIn("七、原始趋势源", body)
 
     def test_editorial_prompt_prioritizes_reader_value(self):
         prompt = digest.EDITORIAL_PROMPT

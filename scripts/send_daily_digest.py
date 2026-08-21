@@ -743,16 +743,15 @@ def editorial_card(item, number=None):
     prefix = f"{number}. " if number else ""
     kind, first_label, first_value, second_label, second_value = editorial_fields(item)
     return (
-        '<div style="padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;margin:8px 0">'
-        f'<div style="font-size:15px;font-weight:700">{prefix}<a style="color:#2563eb;text-decoration:none" '
+        '<div style="padding:22px 0;border-bottom:1px solid #e7e5e4">'
+        f'<div style="font-size:12px;line-height:1.4;color:#78716c;margin-bottom:8px">{html.escape(item["source"])} · {kind} · {html.escape(display_time(item))}</div>'
+        f'<div style="font-size:20px;line-height:1.4;font-weight:750;letter-spacing:-.01em">{prefix}<a style="color:#1c1917;text-decoration:none" '
         f'href="{html.escape(item["url"], quote=True)}">{html.escape(item["title"])}</a></div>'
-        f'<div style="margin-top:5px;color:#6b7280;font-size:12px">{html.escape(item["source"])} · {kind}</div>'
-        f'<div style="margin-top:4px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
-        f'<div style="margin-top:7px">{tag_html(item)}</div>'
-        f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{first_label}：</b>{html.escape(first_value)}</div>'
-        f'<div style="margin-top:6px;color:#374151;line-height:1.55"><b>{second_label}：</b>{html.escape(second_value)}</div>'
-        f'<div style="margin-top:8px"><a href="{html.escape(item["url"], quote=True)}" '
-        f'style="color:#2563eb;text-decoration:none">阅读原文 →</a>{detail_link(item)}</div>'
+        f'<div style="margin-top:10px">{tag_html(item)}</div>'
+        f'<div style="margin-top:10px;color:#292524;font-size:16px;line-height:1.78"><b>{html.escape(first_label)}：</b>{html.escape(first_value)}</div>'
+        f'<div style="margin-top:9px;color:#57534e;font-size:15px;line-height:1.78"><b>{html.escape(second_label)}：</b>{html.escape(second_value)}</div>'
+        f'<div style="margin-top:12px"><a href="{html.escape(item["url"], quote=True)}" '
+        f'style="color:#1d4ed8;text-decoration:none;font-weight:700">打开原文 ↗</a>{detail_link(item)}</div>'
         "</div>"
     )
 
@@ -760,13 +759,19 @@ def editorial_card(item, number=None):
 def compact_link(item):
     summary = ensure_chinese(item.get("ai_first_value") or item.get("summary", ""))[:160]
     return (
-        '<div style="padding:10px 0;border-bottom:1px solid #e5e7eb;line-height:1.5">'
-        f'{tag_html(item)}<br><a href="{html.escape(item["url"], quote=True)}" '
-        f'style="color:#2563eb;text-decoration:none;font-weight:600">{html.escape(item["title"])}</a>'
-        f'<div style="margin-top:3px;color:#64748b;font-size:12px">{html.escape(display_time(item))}</div>'
-        f'<div style="margin-top:5px;color:#475569">{html.escape(summary)}</div>'
-        f'<div style="margin-top:5px"><a href="{html.escape(item["url"], quote=True)}">阅读原文 →</a>{detail_link(item)}</div></div>'
+        '<div style="padding:14px 0;border-bottom:1px solid #e7e5e4;line-height:1.65">'
+        f'<a href="{html.escape(item["url"], quote=True)}" '
+        f'style="color:#1c1917;text-decoration:none;font-size:16px;font-weight:700">{html.escape(item["title"])}</a>'
+        f'<div style="margin-top:4px;color:#78716c;font-size:12px">{html.escape(item["source"])} · {html.escape(display_time(item))}</div>'
+        f'<div style="margin-top:6px;color:#57534e;font-size:14px">{html.escape(summary)}</div></div>'
     )
+
+
+def reader_line(item, limit=92):
+    """Return the useful first sentence used in the issue's reading guide."""
+    text = ensure_chinese(item.get("ai_first_value") or item.get("summary", ""))
+    sentence = re.split(r"(?<=[。！？])", text, maxsplit=1)[0].strip()
+    return (sentence or text)[:limit]
 
 
 EDITORIAL_PROMPT = """你是《每日 AI 日报》的主编，而不是摘要生成器。你的读者是对新知识有好奇心的大学生，以及普通产品经理、创业者和开发者；他们聪明，但没有时间研究论文、榜单或底层参数。
@@ -950,10 +955,10 @@ def render(items, errors, now=None, enrich=True, page_url="", edition_override=N
             continue
         highlights.append(item)
         source_counts[item["source"]] = source_counts.get(item["source"], 0) + 1
-        if len(highlights) == 4:
+        if len(highlights) == 3:
             break
-    if len(highlights) < 4:
-        highlights += [x for x in authority if x not in highlights and not x.get("weak_summary")][:4 - len(highlights)]
+    if len(highlights) < 3:
+        highlights += [x for x in authority if x not in highlights and not x.get("weak_summary")][:3 - len(highlights)]
     highlight_urls = {x["url"] for x in highlights}
     authoritative_more, source_counts = [], {}
     for item in authority:
@@ -962,24 +967,24 @@ def render(items, errors, now=None, enrich=True, page_url="", edition_override=N
             continue
         authoritative_more.append(item)
         source_counts[item["source"]] = source_counts.get(item["source"], 0) + 1
-        if len(authoritative_more) == 5:
+        if len(authoritative_more) == 3:
             break
     used_urls = highlight_urls | {x["url"] for x in authoritative_more}
-    indie_all = [x for x in usable_items if x["source"] == "独立开发者新品"][:5]
-    indie = indie_all[:3]
+    indie_all = [x for x in usable_items if x["source"] == "独立开发者新品"][:3]
+    indie = indie_all[:2]
     used_urls |= {x["url"] for x in indie_all}
     builders = [x for x in select_builder_items(usable_items, now) if x["url"] not in used_urls
-                and not low_signal_item(x)][:3]
+                and not low_signal_item(x)][:2]
     used_urls |= {x["url"] for x in builders}
     discovered = [x for x in usable_items if x["url"] not in used_urls and not x.get("source_class")
                   and x["source"] not in ("独立开发者新品", "AI 人物与观点")]
-    tech = sorted(discovered, key=rank, reverse=True)[:4]
+    tech = sorted(discovered, key=rank, reverse=True)[:3]
     used_urls |= {x["url"] for x in tech}
     original_sources = ("GitHub Trending", "Hacker News", "Product Hunt", "关注项目 · Scrapling")
     trend_latest = sorted(
         [x for x in usable_items if x["source"] in original_sources and x["url"] not in used_urls],
         key=lambda x: (parse_time(x.get("created_at")), x.get("score", 0)), reverse=True,
-    )[:6]
+    )[:4]
     used_urls |= {x["url"] for x in trend_latest}
     remaining = [x for x in usable_items if x["url"] not in used_urls
                  and x["source"] != "独立开发者新品"
@@ -989,8 +994,8 @@ def render(items, errors, now=None, enrich=True, page_url="", edition_override=N
     # capped so the digest never turns into an archive dump.
     recent_more = [x for x in remaining if x.get("daily_scope")]
     older_more = [x for x in remaining if not x.get("daily_scope")]
-    more = sorted(recent_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:10]
-    more += sorted(older_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:4]
+    more = sorted(recent_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:6]
+    more += sorted(older_more, key=lambda x: (x.get("score", 0), rank(x)), reverse=True)[:2]
     indie_more = indie_all[3:]
     selected, selected_urls = [], set()
     for item in highlights + authoritative_more + indie_all + builders + tech + more + trend_latest:
@@ -1002,65 +1007,45 @@ def render(items, errors, now=None, enrich=True, page_url="", edition_override=N
     warning = '<p style="color:#64748b">本次所有来源均正常。</p>'
     if errors:
         warning = '<p style="background:#fff7ed;padding:10px">部分来源暂时不可用：' + html.escape("；".join(errors)) + "</p>"
-    body = f"""<!doctype html><html><body style="margin:0;background:#f3f4f6;font-family:Arial,'Microsoft YaHei',sans-serif;font-size:14px;line-height:1.55;color:#1f2937">
-<div style="max-width:760px;margin:auto;background:white;padding:20px">
-<a id="top" name="top"></a><h1 style="font-size:24px;margin:0 0 8px">每日 AI 日报 · {edition}</h1>
-<p style="color:#6b7280;margin:4px 0">{now:%Y-%m-%d %H:%M}（北京时间）· 共 {len(items)} 条候选，已全局去重</p>
-{f'<p style="margin:12px 0"><a href="{html.escape(page_url, quote=True)}" style="display:inline-block;padding:10px 16px;background:#275efe;color:white;border-radius:9px;text-decoration:none;font-weight:700">查看完整深度版 →</a></p>' if page_url else ''}
-<p style="color:#475569;line-height:1.55;margin:8px 0">只读取最近三个自然日的来源条目；重点文章先读取正文再提炼结论，技术细节转译为大学生容易理解的能力、场景与影响。</p>
-<div id="toc" style="padding:11px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:12px 0">
-<b>目录</b>
-<div style="margin-top:6px;line-height:1.75">
-<a href="#highlights" style="color:#2563eb">一、本期看点</a><br>
-<a href="#authority" style="color:#2563eb">二、权威资讯与行业变化</a><br>
-<a href="#voices" style="color:#2563eb">三、人物与观点</a><br>
-<a href="#tech" style="color:#2563eb">四、开源、模型与研究</a><br>
-<a href="#more" style="color:#2563eb">五、更多资讯</a><br>
-<a href="#apps" style="color:#2563eb">六、今日独立开发者新品</a><br>
-<a href="#trends" style="color:#2563eb">七、原始趋势源·今日速览</a>
-</div></div>
-<a id="highlights" name="highlights"></a>
-<div style="padding:14px;background:#fff7ed;border-radius:8px;margin-bottom:14px">
-<h2 style="color:#9a3412;font-size:19px;margin:0 0 6px">一、本期看点</h2>{back_to_toc()}
-<p style="color:#475569;line-height:1.6">优先采用官方原文和专业编辑来源，把同一事件合并后讲清楚。</p>
-{''.join(editorial_card(x, i) for i, x in enumerate(highlights, 1)) if highlights else '<p>本期暂未发现足够重要的新内容。</p>'}
-</div>
-<a id="authority" name="authority"></a>
-<div style="padding:14px;background:#f8fafc;border-radius:8px;margin-bottom:14px">
-<h2 style="color:#334155;font-size:19px;margin:0 0 6px">二、权威资讯与行业变化</h2>{back_to_toc()}
-{''.join(editorial_card(x, i) for i, x in enumerate(authoritative_more, 1)) if authoritative_more else '<p>本期暂无补充。</p>'}
-</div>
-<a id="voices" name="voices"></a>
-<div style="padding:14px;background:#f5f3ff;border-radius:8px;margin-bottom:14px">
-<h2 style="color:#6d28d9;font-size:19px;margin:0 0 6px">三、人物与观点</h2>{back_to_toc()}
-<p style="color:#475569;line-height:1.6">只保留有完整论点、实际经验或明确判断的内容。</p>
-{''.join(builder_card(x) for x in builders) if builders else '<p>本次中央 Feed 暂无足够有信息量的新内容。</p>'}
-</div>
-<a id="tech" name="tech"></a>
-<div style="padding:14px;background:#eff6ff;border-radius:8px">
-<h2 style="color:#1d4ed8;font-size:19px;margin:0 0 6px">四、开源、模型与研究</h2>{back_to_toc()}
-<p style="color:#475569;line-height:1.6">榜单只负责发现线索，优先保留真正解决问题或带来能力变化的项目。</p>
-{''.join(editorial_card(x, i) for i, x in enumerate(tech, 1))}
-</div>
-<a id="more" name="more"></a><h2 style="font-size:19px">五、更多资讯</h2>{back_to_toc()}
-<p style="color:#64748b">最近三天未进入重点区的内容保留为速览，并标明来源、时间和原文链接。</p>
-{''.join(compact_link(x) for x in more)}
-<a id="apps" name="apps"></a>
-<div style="padding:14px;background:#f0fdf4;border-radius:8px;margin:16px 0">
-<h2 style="color:#166534;font-size:19px;margin:0 0 6px">六、今日独立开发者新品</h2>{back_to_toc()}
-<p style="color:#475569;line-height:1.6">保留 Chinese Independent Developer，每期只展示当天或最近一批的 3 个最新应用。</p>
-{''.join(editorial_card(x, i) for i, x in enumerate(indie, 1)) if indie else '<p>今天暂未抓到新的应用。</p>'}
-{''.join(compact_link(x) for x in indie_more)}
-</div>
-<a id="trends" name="trends"></a>
-<div style="padding:14px;background:#f8fafc;border-radius:8px;margin-bottom:14px">
-<h2 style="color:#334155;font-size:19px;margin:0 0 6px">七、原始趋势源·今日速览</h2>{back_to_toc()}
-<p style="color:#64748b">GitHub Trending、Hacker News、Product Hunt 和关注项目的本次新增条目全部保留；技术性过强的内容只做一句话说明。</p>
-{''.join(compact_link(x) for x in trend_latest) if trend_latest else '<p>本次没有未收录的今日趋势内容。</p>'}
-</div>
-<h2 style="margin-top:24px">来源状态</h2>{warning}
-<p style="padding:12px;background:#f8fafc;border-radius:8px">欢迎大家多多转发～如想订阅，请发送【订阅】到 19731018777@163.com</p>
-<p style="color:#9ca3af;font-size:12px">每日 AI 日报自动整理。</p>
+    practical_pool = indie + [x for x in tech + authoritative_more if editorial_type(x) in ("product", "open_source")]
+    practical, seen = [], set(highlight_urls)
+    for item in practical_pool:
+        if item["url"] not in seen:
+            practical.append(item)
+            seen.add(item["url"])
+        if len(practical) == 2:
+            break
+    thinking_pool = builders + [x for x in tech + authoritative_more if editorial_type(x) == "research"]
+    thinking = []
+    for item in thinking_pool:
+        if item["url"] not in seen:
+            thinking.append(item)
+            seen.add(item["url"])
+        if len(thinking) == 2:
+            break
+    briefing = [x for x in more + trend_latest + authoritative_more + tech if x["url"] not in seen][:6]
+    reading_minutes = max(3, round((sum(len(reader_line(x, 500)) for x in highlights + practical + thinking) + 420) / 500))
+    guide = "".join(
+        f'<div style="padding:9px 0;border-bottom:1px solid #e7e5e4"><a href="{html.escape(x["url"], quote=True)}" style="color:#1c1917;text-decoration:none;font-weight:750">{i}. {html.escape(x["title"])}</a><div style="margin-top:4px;color:#57534e">{html.escape(reader_line(x))}</div></div>'
+        for i, x in enumerate(highlights, 1)
+    ) or '<p style="color:#78716c">本期没有足够可靠的重点内容。</p>'
+    body = f"""<!doctype html><html lang="zh-CN"><body style="margin:0;background:#f5f5f4;font-family:Arial,'Microsoft YaHei',sans-serif;color:#292524">
+<div style="max-width:700px;margin:auto;background:#fff;padding:34px 30px;font-size:15px;line-height:1.75">
+<div style="font-size:12px;color:#a16207;font-weight:800;letter-spacing:.12em">TRENDING AI · {edition}</div>
+<h1 style="font-size:30px;line-height:1.2;letter-spacing:-.03em;margin:8px 0 10px">今天的 AI，先读这三件事</h1>
+<p style="color:#78716c;margin:0 0 22px">{now:%Y-%m-%d} · 北京时间 · 约 {reading_minutes} 分钟读完</p>
+<div style="padding:18px 20px;background:#fafaf9;border-left:4px solid #f59e0b;margin:0 0 28px">
+<div style="font-size:13px;font-weight:800;color:#a16207;margin-bottom:4px">今日阅读路线</div>{guide}</div>
+{f'<p style="margin:0 0 28px"><a href="{html.escape(page_url, quote=True)}" style="display:inline-block;padding:11px 17px;background:#1c1917;color:#fff;border-radius:8px;text-decoration:none;font-weight:750">打开完整日报与资料库 ↗</a></p>' if page_url else ''}
+<h2 style="font-size:13px;letter-spacing:.1em;color:#a16207;margin:30px 0 0">01 · 今天最值得知道</h2>
+{''.join(editorial_card(x, i) for i, x in enumerate(highlights, 1)) if highlights else '<p>本期暂无足够可靠的重点内容。</p>'}
+{f'<h2 style="font-size:13px;letter-spacing:.1em;color:#166534;margin:34px 0 0">02 · 可以马上试试</h2><p style="color:#78716c;margin:7px 0 0">只收录能说清用途、门槛和限制的工具。</p>{"".join(editorial_card(x) for x in practical)}' if practical else ''}
+{f'<h2 style="font-size:13px;letter-spacing:.1em;color:#6d28d9;margin:34px 0 0">03 · 值得想一想</h2><p style="color:#78716c;margin:7px 0 0">研究、观点和仍未落地的变化，与现成产品分开看。</p>{"".join(editorial_card(x) for x in thinking)}' if thinking else ''}
+<h2 style="font-size:13px;letter-spacing:.1em;color:#475569;margin:34px 0 0">04 · 其余速览</h2>
+{''.join(compact_link(x) for x in briefing) if briefing else '<p style="color:#78716c">没有需要补充的短讯。</p>'}
+<div style="margin-top:34px;padding-top:18px;border-top:1px solid #d6d3d1;font-size:13px;color:#78716c">{warning}
+<p>欢迎转发。订阅请发送【订阅】到 19731018777@163.com。</p>
+<p style="color:#a8a29e">本期从 {len(items)} 条候选中编辑选出；数量不是目标，读完有用才是。</p></div>
 </div></body></html>"""
     return f"每日 AI 日报｜{edition}｜{now:%m月%d日 %H:%M}", body
 
