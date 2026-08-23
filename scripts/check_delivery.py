@@ -25,8 +25,6 @@ def edition_values(now, requested):
 def decide(marker_status, runs, target):
     if marker_status == "sent" or marker_status is True:
         return "sent"
-    if marker_status == "sending":
-        return "running"
     for run in runs:
         try:
             created = datetime.fromisoformat(run.get("createdAt", "").replace("Z", "+00:00"))
@@ -45,6 +43,10 @@ def remote_marker_status(repo, marker_name):
             return json.loads(response.read().decode("utf-8")).get("status", "")
     except Exception:
         return ""
+
+
+def editorial_issue_path(marker_name):
+    return ROOT / "data" / "editorial" / f"{marker_name}.json"
 
 
 def main():
@@ -81,6 +83,10 @@ def main():
         return
     if action == "running":
         print(f"DELIVERY_WAIT active_run_for={now:%Y-%m-%d}-{slug}")
+        return
+    issue_path = editorial_issue_path(marker_name)
+    if not issue_path.exists():
+        print(f"EDITORIAL_MISSING marker={marker_name} path={issue_path}; fallback_will_not_dispatch")
         return
     if args.dry_run:
         print(f"WOULD_DISPATCH edition={slug}")
