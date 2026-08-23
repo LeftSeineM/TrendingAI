@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def edition_values(now, requested):
     slug = requested if requested in ("morning", "evening") else ("morning" if now.hour < 18 else "evening")
-    hour = 8 if slug == "morning" else 18
+    hour = 12 if slug == "morning" else 18
     target = now.replace(hour=hour, minute=0, second=0, microsecond=0)
     return slug, target
 
@@ -25,8 +25,6 @@ def edition_values(now, requested):
 def decide(marker_status, runs, target):
     if marker_status == "sent" or marker_status is True:
         return "sent"
-    if marker_status == "sending":
-        return "running"
     for run in runs:
         try:
             created = datetime.fromisoformat(run.get("createdAt", "").replace("Z", "+00:00"))
@@ -45,6 +43,10 @@ def remote_marker_status(repo, marker_name):
             return json.loads(response.read().decode("utf-8")).get("status", "")
     except Exception:
         return ""
+
+
+def editorial_issue_path(marker_name):
+    return ROOT / "data" / "editorial" / f"{marker_name}.json"
 
 
 def main():
@@ -81,6 +83,10 @@ def main():
         return
     if action == "running":
         print(f"DELIVERY_WAIT active_run_for={now:%Y-%m-%d}-{slug}")
+        return
+    issue_path = editorial_issue_path(marker_name)
+    if not issue_path.exists():
+        print(f"EDITORIAL_MISSING marker={marker_name} path={issue_path}; fallback_will_not_dispatch")
         return
     if args.dry_run:
         print(f"WOULD_DISPATCH edition={slug}")

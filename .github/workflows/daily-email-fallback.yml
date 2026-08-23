@@ -2,8 +2,8 @@ name: Daily Email Cloud Fallback
 
 on:
   schedule:
-    # 00:15/10:15 UTC = 08:15/18:15 Asia/Shanghai.
-    - cron: "15 0,10 * * *"
+    # 04:15 UTC = 12:15 Asia/Shanghai.
+    - cron: "15 4 * * *"
   workflow_dispatch:
     inputs:
       edition:
