@@ -27,16 +27,16 @@ class DeliveryTests(unittest.TestCase):
         self.issue = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     def test_marker_wins(self):
-        target = datetime(2026, 8, 24, 8, tzinfo=ZoneInfo("Asia/Shanghai"))
+        target = datetime(2026, 8, 24, 12, tzinfo=ZoneInfo("Asia/Shanghai"))
         self.assertEqual("sent", fallback.decide("sent", [], target))
 
     def test_sending_marker_without_active_run_can_recover(self):
-        target = datetime(2026, 8, 24, 8, tzinfo=ZoneInfo("Asia/Shanghai"))
+        target = datetime(2026, 8, 24, 12, tzinfo=ZoneInfo("Asia/Shanghai"))
         self.assertEqual("dispatch", fallback.decide("sending", [], target))
 
     def test_active_run_prevents_duplicate(self):
-        target = datetime(2026, 8, 24, 8, tzinfo=ZoneInfo("Asia/Shanghai"))
-        runs = [{"createdAt": "2026-08-24T00:05:00Z", "status": "in_progress"}]
+        target = datetime(2026, 8, 24, 12, tzinfo=ZoneInfo("Asia/Shanghai"))
+        runs = [{"createdAt": "2026-08-24T04:05:00Z", "status": "in_progress"}]
         self.assertEqual("running", fallback.decide("", runs, target))
 
     def test_missing_run_would_dispatch_only_after_other_guards(self):
@@ -76,7 +76,7 @@ class DeliveryTests(unittest.TestCase):
 
     def test_page_and_email_preserve_edited_prose_and_sources(self):
         with tempfile.TemporaryDirectory() as tmp:
-            url = editorial.render_page(self.issue, "上午篇", tmp, "https://example.test/daily")
+            url = editorial.render_page(self.issue, "每日版", tmp, "https://example.test/daily")
             subject, email = editorial.render_email(self.issue, url)
             page = (Path(tmp) / "index.html").read_text(encoding="utf-8")
             self.assertEqual(self.issue["subject"], subject)
@@ -91,9 +91,16 @@ class DeliveryTests(unittest.TestCase):
     def test_workflow_uses_editorial_issue_and_has_no_ai_fallback(self):
         workflow = (ROOT / ".github" / "workflows" / "daily-email.yml").read_text(encoding="utf-8")
         self.assertIn("publish_editorial_issue.py", workflow)
+        self.assertIn('cron: "0 4 * * *"', workflow)
+        self.assertNotIn('cron: "0 0,10 * * *"', workflow)
         self.assertNotIn("send_daily_digest.py", workflow)
         self.assertNotIn("AI_API_KEY", workflow)
         self.assertNotIn("falls back", workflow)
+
+    def test_cloud_fallback_runs_only_once_after_noon_delivery(self):
+        workflow = (ROOT / ".github" / "workflows" / "daily-email-fallback.yml").read_text(encoding="utf-8")
+        self.assertIn('cron: "15 4 * * *"', workflow)
+        self.assertNotIn('cron: "15 0,10 * * *"', workflow)
 
     def test_pages_redeploy_after_digest_workflow(self):
         workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")

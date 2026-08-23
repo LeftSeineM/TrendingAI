@@ -52,7 +52,7 @@ def parse_now(value):
 
 def edition_values(now, requested):
     slug = requested if requested in ("morning", "evening") else ("morning" if now.hour < 18 else "evening")
-    return slug, "上午篇" if slug == "morning" else "下午篇"
+    return slug, "每日版" if slug == "morning" else "补充版"
 
 
 def canonical_url(value):

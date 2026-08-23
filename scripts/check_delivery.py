@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def edition_values(now, requested):
     slug = requested if requested in ("morning", "evening") else ("morning" if now.hour < 18 else "evening")
-    hour = 8 if slug == "morning" else 18
+    hour = 12 if slug == "morning" else 18
     target = now.replace(hour=hour, minute=0, second=0, microsecond=0)
     return slug, target
 
