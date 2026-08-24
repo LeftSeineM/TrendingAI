@@ -46,6 +46,14 @@ class DeliveryTests(unittest.TestCase):
     def test_valid_editorial_issue_passes_strict_gate(self):
         self.assertEqual([], editorial.validate_issue(self.issue, "2026-08-24", "morning"))
 
+    def test_issue_headlines_require_reader_facing_date_prefix(self):
+        issue = copy.deepcopy(self.issue)
+        issue["subject"] = "AI 开始接管完整工作流，真正的瓶颈转向验证"
+        issue["title"] = "当模型不再只回答问题"
+        errors = editorial.validate_issue(issue, "2026-08-24", "morning")
+        self.assertIn("subject 必须以当天日期“2026年8月24日｜”开头", errors)
+        self.assertIn("title 必须以当天日期“2026年8月24日｜”开头", errors)
+
     def test_generic_copy_is_rejected(self):
         issue = copy.deepcopy(self.issue)
         issue["stories"][0]["body"][0] += "这件事值得持续关注。"

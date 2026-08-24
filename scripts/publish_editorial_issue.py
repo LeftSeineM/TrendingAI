@@ -66,6 +66,15 @@ def chinese_count(value):
     return len(re.findall(r"[\u4e00-\u9fff]", str(value or "")))
 
 
+def issue_date_prefix(value):
+    """Return the reader-facing date prefix required by every issue headline."""
+    try:
+        parsed = datetime.strptime(str(value or ""), "%Y-%m-%d")
+    except ValueError:
+        return ""
+    return f"{parsed.year}年{parsed.month}月{parsed.day}日｜"
+
+
 def validate_issue(issue, expected_date=None, expected_edition=None):
     """Return all editorial problems instead of silently repairing weak copy."""
     errors = []
@@ -77,11 +86,17 @@ def validate_issue(issue, expected_date=None, expected_edition=None):
         errors.append(f"edition 必须为 {expected_edition}")
     if issue.get("edition") not in ("morning", "evening"):
         errors.append("edition 只能是 morning 或 evening")
+    date_prefix = issue_date_prefix(issue.get("date"))
+    if not date_prefix:
+        errors.append("date 必须使用 YYYY-MM-DD 格式")
     for field, minimum, maximum in (
         ("subject", 8, 34), ("title", 8, 28), ("standfirst", 70, 260), ("editor_note", 45, 220),
     ):
         value = str(issue.get(field, "")).strip()
-        count = chinese_count(value)
+        if field in ("subject", "title") and date_prefix and not value.startswith(date_prefix):
+            errors.append(f"{field} 必须以当天日期“{date_prefix}”开头")
+        prose = value[len(date_prefix):] if field in ("subject", "title") and value.startswith(date_prefix) else value
+        count = chinese_count(prose)
         if count < minimum or count > maximum:
             errors.append(f"{field} 需包含 {minimum}～{maximum} 个汉字，当前 {count}")
         if any(phrase in value for phrase in BANNED_COPY):
