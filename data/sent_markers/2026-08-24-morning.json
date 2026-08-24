@@ -1,6 +1,9 @@
 {
   "marker": "2026-08-24-morning",
-  "status": "sending",
-  "started_at": "2026-08-24T05:24:36.205974+00:00",
-  "run_id": "32693425557"
+  "status": "sent",
+  "sent_at": "2026-08-24T05:24:49.119218+00:00",
+  "edition": "morning",
+  "recipient_count": 33,
+  "page_url": "https://leftseinem.github.io/TrendingAI/daily/2026-08-24-morning.html",
+  "editorial_issue": "data/editorial/2026-08-24-morning.json"
 }
