@@ -1,0 +1,139 @@
+{
+  "date": "2026-08-31",
+  "edition": "morning",
+  "subject": "2026年8月31日｜AI开始进入流程，真正的门槛变成权限、数据和验收",
+  "title": "2026年8月31日｜AI开始进入流程，真正的门槛变成权限、数据和验收",
+  "standfirst": "今天的前沿不在聊天框里。新闻机构让代理查询内部经营数据，消防系统从千万级图像里抢出预警时间，法律和广告产品开始把AI接进有权限、有规则的工作流。模型能力仍在进步，但决定它能否真正帮上忙的，越来越是数据能否接通、动作能否受控，以及结果有没有人负责验收。",
+  "editor_note": "这期应用内容占多数。读完可以带走一个实用判断：遇到新的AI产品，先别问它会不会回答；先看它能接触哪些可信数据、能替你执行到哪一步、权限是否沿用原系统，以及出错时谁能发现并接管。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "《华盛顿邮报》没有造一个万能助手，而是拆成三类数据代理",
+      "teaser": "内容、订阅和广告各用自己的指标、数据表与权限逻辑，先解决反复找分析师问数的问题。",
+      "source": {
+        "name": "OpenAI Academy / The Washington Post",
+        "url": "https://academy.openai.com/public/clubs/news-organizations-b9osl/resources/how-the-washington-posts-builds-ai-agents",
+        "type": "primary",
+        "published_at": "2026-08-28"
+      },
+      "body": [
+        "《华盛顿邮报》的分析团队正在用ChatGPT和OpenAI API搭建一组内部代理，但没有把所有问题塞进同一个聊天机器人。内容代理回答文章表现，广告代理解释投放数据，订阅代理处理获客与转化问题；每个代理只连接经过治理的数据表、指标定义和内部文档，并按照提问者权限决定可以返回什么。团队还把四五句话的自动解读放进邮件、PDF报告和仪表盘，帮助业务人员先看懂变化，再决定是否深挖。",
+        "这个做法比“让AI分析公司数据”具体得多。业务数据最难的通常不是算数，而是同一个词在不同部门含义不同：活跃、转化、收入都可能有自己的口径。邮报把代理按问题域拆开，等于让每个代理带着一套固定词典、可信数据和访问边界工作，既缩短重复问数的时间，也减少把不该共享的数据带进答案的风险。订阅代理仍处在验证阶段，官方没有给出节省时间或提升收入的量化结论。",
+        "如果你想在团队里复制，不必先做万能知识库。挑一种每周反复出现的问题，写清指标定义，准备一张经过核对的汇总表，再限制代理只能读这些材料。先看它能否连续十次给出同口径答案；只有这一步稳定，才值得接更多数据和动作。"
+      ],
+      "tags": ["数据分析", "企业代理", "真实实践"]
+    },
+    {
+      "section": "lead",
+      "title": "AI在加州做的不是预测大火，而是替消防员抢回最早几分钟",
+      "teaser": "近一千三百个摄像头持续看烟，系统先过滤云雾和光线变化，再把实时画面交给调度员确认。",
+      "source": {
+        "name": "Microsoft Unlocked / ALERTCalifornia",
+        "url": "https://unlocked.microsoft.com/alertcalifornia-ai-wildfire-detection/",
+        "type": "primary",
+        "published_at": "2026-08-27"
+      },
+      "body": [
+        "加州大学圣迭戈分校的ALERTCalifornia已布设近一千三百个摄像头，并与微软AI for Good Lab及消防机构合作，让视觉模型持续检查实时画面。系统每天处理超过七百万张图像，发现疑似烟雾后会比较不同机位、核对位置并在数分钟内发出提醒。项目方称，它曾比第一通报警电话早两个半小时发现火情；网络启用最初两个月里，有七十七起事件在公众报告前被识别。",
+        "真正有价值的不是“AI识别烟”这项孤立能力，而是它被放进了消防流程：模型负责从云、雾、晨光和烟雾中筛选异常，调度员看到实时画面，消防员再结合风向、地形和经验决定是否出动、从哪里进入。系统没有替代现场判断，却把依赖路人目击的被动报警，变成全天候的机器巡查。项目方也说明，当前重点是发现，下一阶段才是预测火势如何发展。",
+        "这是评估公共领域AI的好尺度：不要只看识别准确率，还要看它是否缩短了从信号到行动的时间、误报由谁复核、现场人员是否拿到了可判断的证据。AI最成熟的角色，往往不是最后拍板，而是让专业人员更早看见问题。"
+      ],
+      "tags": ["消防", "计算机视觉", "公共服务"]
+    },
+    {
+      "section": "lead",
+      "title": "法律AI开始从写答案，转向沿用事务所原有的权限做事",
+      "teaser": "Google推出法律行业版Gemini Enterprise，把合同、监管和诉讼任务接到文档与取证系统，但目前仍是预览。",
+      "source": {
+        "name": "Google Cloud",
+        "url": "https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise-for-legal",
+        "type": "official",
+        "published_at": "2026-08-25"
+      },
+      "body": [
+        "Google发布Gemini Enterprise for Legal预览版，把合同审阅、监管动态扫描、法律研究、数据访问请求和文件起草做成专用技能与代理。它通过MCP连接iManage、NetDocuments、Docusign、Everlaw、RelativityOne等法律系统，关键设计是继承原系统已有的用户和文档权限，而不是把材料统一复制进一个无差别知识库。Google还承诺，客户文档、提示、输出和自定义代理不会用于训练其基础模型。",
+        "这说明垂直AI的竞争正在从“谁更会写法律文字”转向“谁能在不破坏保密墙的前提下完成一段流程”。合同红线、监管扫描和证据检索都不是单纯生成文本：它们需要引用可追溯、权限随人变化、最后由律师确认。产品目前只是预览，案例主要来自Google及合作律所，尚没有独立披露的准确率、成本或长期生产数据，因此不能把功能清单当成效果证明。",
+        "普通团队也能借鉴这个边界：敏感资料不要先全量喂给AI，再补权限；应该让代理沿用文件系统的访问控制，并要求每个结论回到原文。对法律、财务、人事等高风险场景，能否证明“它看了什么、为何这样说”比文风多漂亮更重要。"
+      ],
+      "tags": ["法律科技", "权限", "垂直应用"]
+    },
+    {
+      "section": "use",
+      "title": "广告平台把代理放进投放后台，先让它找问题和预估改动",
+      "teaser": "The Trade Desk的Kokai Zuma开始全球推出，助手可以建受众、排查异常和分析表现，功能状态并不完全一致。",
+      "source": {
+        "name": "The Trade Desk",
+        "url": "https://www.thetradedesk.com/press-room/the-trade-desk-introduces-kokai-zuma-the-latest-release-of-kokai",
+        "type": "official",
+        "published_at": "2026-08-27"
+      },
+      "body": [
+        "The Trade Desk正在向Kokai客户推出Zuma更新。新的Koa Assistant由多种专用代理组成，可协助创建广告活动与受众、排查投放问题、分析效果并寻找机会；批量修改前还能预览潜在影响。公司称，底层预测模型升级后，早期结果平均改善了百分之三十二的获客成本，但这是厂商口径，而且本次公布的功能混合了正式可用、开放测试、封闭测试和未来计划。",
+        "如果你负责投放，最适合先交给代理的是高频、可撤回的工作：找出频次过高的广告、解释花费突然下降、整理需要人工确认的修改清单。预算、受众边界和最终上线仍应设审批。代理进入操作后台后，风险不再只是答错一句话，而是一次错误动作真的会花钱。"
+      ],
+      "tags": ["广告", "营销", "代理操作"]
+    },
+    {
+      "section": "use",
+      "title": "团队开始大量跑代理后，最先失控的可能不是效果，而是账单",
+      "teaser": "Google Cloud增加项目级费用上限、异常分析和共享额度，让代理使用从个人订阅变成可治理的运营成本。",
+      "source": {
+        "name": "Google Cloud",
+        "url": "https://cloud.google.com/blog/products/ai-machine-learning/flexible-billing-and-cost-controls-for-agents-on-google-cloud",
+        "type": "official",
+        "published_at": "2026-08-26"
+      },
+      "body": [
+        "Google Cloud为Gemini Enterprise和开发代理增加了新的费用控制：项目可以设置月度硬上限，在达到百分之五十、八十和一百时提醒；异常支出会标出主要费用来源；团队还能把每日额度在项目内共享，并在部分客户中使用按量付费。延后到低峰运行并打折的方案仍标为即将推出，按量版也在逐步开放，并非所有客户今天都能使用。",
+        "这条更新看似是计费，实际反映了代理与聊天工具的不同：长任务会循环调用模型和工具，个人一次点击可能变成后台持续消耗。团队落地代理时，除了准确率，至少应记录单次任务成本、失败重试次数和无人看管时的停止条件。预算上限不是财务部门的收尾工作，而是代理权限的一部分。"
+      ],
+      "tags": ["成本", "企业管理", "代理治理"]
+    },
+    {
+      "section": "think",
+      "title": "AI让人少处理邮件、多做文档，但这还不能直接叫生产率提升",
+      "teaser": "一项跨企业数字轨迹研究发现，高频用户的内容生产与沟通动作都增加了；因果关系和工作质量仍待验证。",
+      "source": {
+        "name": "Microsoft Research",
+        "url": "https://www.microsoft.com/en-us/research/publication/adoption-of-generative-ai-in-the-workplace-increasing-and-shifting-the-balance-of-productivity-and-communication-activity/",
+        "type": "research",
+        "published_at": "2026-08-27"
+      },
+      "body": [
+        "微软研究者分析多家跨国公司M365里的数字行为，用差分中的差分方法比较AI采用前后变化。对二十周内使用AI超过一百次的人，Word等生产类应用动作增加百分之二十一点二，沟通类动作增加百分之七点一；邮件阅读和整理有所下降，文档型个人工作占比上升。它提示AI可能减少部分信息处理负担，却没有证明产出质量提高，也没有证明这些变化完全由AI造成。",
+        "这里有个需要警惕的反直觉结果：如果人把省下的时间全部变成更多文档，组织未必就更有效，反而可能制造新的阅读负担。评估AI工具时，不要只数生成了多少页、完成了多少动作；还要观察会议是否减少、决策是否变快、返工是否下降，以及原本通过交流扩散的隐性知识有没有被削弱。"
+      ],
+      "tags": ["未来工作", "生产率", "研究"]
+    },
+    {
+      "section": "quick",
+      "title": "开放模型进原生应用，部署链条正在被压成两个步骤",
+      "teaser": "NVIDIA开源TensorRT Model Connect，支持把部分模型打包后直接在C++程序中运行；覆盖范围仍取决于已实现模型。",
+      "source": {
+        "name": "NVIDIA Developer Blog",
+        "url": "https://developer.nvidia.com/blog/deploy-an-open-model-from-checkpoint-to-inference-in-two-commands-with-nvidia-tensorrt-model-connect/",
+        "type": "official",
+        "published_at": "2026-08-28"
+      },
+      "body": [
+        "NVIDIA发布开源的TensorRT Model Connect参考实现：开发者可先从Hugging Face模型编号或本地检查点构建部署包，再由C++程序加载，不需要在生产环境携带PyTorch或Python解释器。项目覆盖文本、视觉和音频任务，并允许替换自定义内核。它不是新的推理框架，也不是任意模型都能两步完成；价值在于把已支持模型最容易出错的转换、预处理和运行时连接整理成可检查的实现，适合需要本地、边缘或原生C++部署的团队先做小规模验证。"
+      ],
+      "tags": ["开源模型", "部署", "开发工具"]
+    },
+    {
+      "section": "quick",
+      "title": "训练代理的重点开始从模型，转向它实际工作的那套工具外壳",
+      "teaser": "Agent Lightning 1.0把真实代理的工具、上下文和控制流程接进强化学习，并公开了可复现训练链路。",
+      "source": {
+        "name": "Microsoft Research",
+        "url": "https://www.microsoft.com/en-us/research/publication/agent-lightning-v1-0-towards-harnessed-agentic-rl/",
+        "type": "research",
+        "published_at": "2026-08-27"
+      },
+      "body": [
+        "Microsoft Research发布约三千五百行代码的Agent Lightning 1.0，让任意代理外壳通过模型请求代理接入强化学习。研究者用六千个训练样本，把Qwen3.5-9B在SWE-bench Verified上的结果从百分之四十一点八提高到百分之五十六点四，并公开编码代理训练脚本。这个结果说明，代理能力不只来自更大的基础模型，工具调用、上下文与控制流程也可以一起参与训练；但它仍是研究框架和单组实验，不能直接推导到所有业务代理。"
+      ],
+      "tags": ["代理训练", "强化学习", "开源研究"]
+    }
+  ]
+}
