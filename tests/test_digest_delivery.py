@@ -54,6 +54,23 @@ class DeliveryTests(unittest.TestCase):
         self.assertIn("subject 必须以当天日期“2026年8月24日｜”开头", errors)
         self.assertIn("title 必须以当天日期“2026年8月24日｜”开头", errors)
 
+    def test_daily_quote_requires_attribution_and_verifiable_source(self):
+        issue = copy.deepcopy(self.issue)
+        issue["daily_quote"]["author"] = ""
+        issue["daily_quote"]["source_url"] = "http://example.com/quote"
+        errors = editorial.validate_issue(issue, "2026-08-24", "morning")
+        self.assertIn("daily_quote.author 需为 2～80 个字符", errors)
+        self.assertIn("daily_quote.source_url 必须是可核验的 https 来源", errors)
+
+    def test_daily_quote_is_rendered_in_email_and_page(self):
+        _, email_html = editorial.render_email(self.issue, "https://example.com/daily/")
+        self.assertIn(self.issue["daily_quote"]["text"], email_html)
+        with tempfile.TemporaryDirectory() as tmp:
+            editorial.render_page(self.issue, "早报", Path(tmp))
+            page_html = (Path(tmp) / "index.html").read_text(encoding="utf-8")
+        self.assertIn(self.issue["daily_quote"]["author"], page_html)
+        self.assertIn(self.issue["daily_quote"]["source_url"], page_html)
+
     def test_generic_copy_is_rejected(self):
         issue = copy.deepcopy(self.issue)
         issue["stories"][0]["body"][0] += "这件事值得持续关注。"

@@ -102,6 +102,27 @@ def validate_issue(issue, expected_date=None, expected_edition=None):
         if any(phrase in value for phrase in BANNED_COPY):
             errors.append(f"{field} 含空泛表达")
 
+    daily_quote = issue.get("daily_quote")
+    if not isinstance(daily_quote, dict):
+        errors.append("daily_quote 必须是对象")
+    else:
+        quote_text = str(daily_quote.get("text", "")).strip()
+        quote_author = str(daily_quote.get("author", "")).strip()
+        quote_source_name = str(daily_quote.get("source_name", "")).strip()
+        quote_source_url = str(daily_quote.get("source_url", "")).strip()
+        if not 8 <= len(quote_text) <= 140:
+            errors.append("daily_quote.text 需为 8～140 个字符")
+        if not 2 <= len(quote_author) <= 80:
+            errors.append("daily_quote.author 需为 2～80 个字符")
+        if not 2 <= len(quote_source_name) <= 100:
+            errors.append("daily_quote.source_name 需为 2～100 个字符")
+        try:
+            parsed_quote_source = urllib.parse.urlsplit(quote_source_url)
+            if parsed_quote_source.scheme != "https" or not parsed_quote_source.netloc:
+                raise ValueError
+        except ValueError:
+            errors.append("daily_quote.source_url 必须是可核验的 https 来源")
+
     stories = issue.get("stories")
     if not isinstance(stories, list):
         return errors + ["stories 必须是数组"]
@@ -212,9 +233,15 @@ def render_email(issue, page_url):
         label = SECTION_LABELS[section]
         cards = "".join(render_story_email(story, index if section == "lead" else None) for index, story in enumerate(grouped[section], 1))
         parts.append(f'<h2 style="font-size:13px;letter-spacing:.1em;color:#a16207;margin:36px 0 0">{html.escape(label)}</h2>{cards}')
+    quote = issue["daily_quote"]
+    quote_block = f'''<blockquote style="margin:18px 0 22px;padding:14px 18px;border-left:3px solid #d6a756;background:#fffaf0;color:#44403c">
+<p style="margin:0;font:italic 17px/1.7 Georgia,'Noto Serif SC','Microsoft YaHei',serif">“{html.escape(quote["text"])}”</p>
+<footer style="margin-top:7px;color:#78716c;font-size:12px">— {html.escape(quote["author"])} · <a href="{html.escape(quote["source_url"], quote=True)}" style="color:#78716c">{html.escape(quote["source_name"])}</a></footer>
+</blockquote>'''
     body = f'''<!doctype html><html lang="zh-CN"><body style="margin:0;background:#f5f5f4;font-family:Arial,'Microsoft YaHei',sans-serif;color:#292524"><main style="max-width:700px;margin:auto;background:#fff;padding:34px 30px">
 <div style="font-size:12px;color:#a16207;font-weight:800;letter-spacing:.14em">TRENDING AI · EDITED BY CODEX</div>
 <h1 style="font:700 31px/1.24 Georgia,'Microsoft YaHei',serif;letter-spacing:-.02em;margin:9px 0">{html.escape(issue["title"])}</h1>
+{quote_block}
 <p style="color:#57534e;font-size:16px;line-height:1.75;margin:0 0 22px">{html.escape(issue["standfirst"])}</p>
 <div style="padding:18px 20px;background:#fafaf9;border-left:4px solid #f59e0b"><b style="font-size:13px;color:#a16207">今天怎么读</b>{guide}</div>
 <p style="margin:18px 0"><a href="{html.escape(page_url, quote=True)}" style="display:inline-block;padding:10px 15px;background:#1c1917;color:#fff;border-radius:8px;text-decoration:none;font-weight:700">打开网页版与全部来源 ↗</a></p>
@@ -251,9 +278,11 @@ def render_page(issue, edition_label, output_dir=DOCS_DIR, base_url=None):
     archive = archive[:120]
     archive_path.write_text(json.dumps(archive, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     archive_links = "".join(f'<a href="{html.escape(row["file"], quote=True)}">{html.escape(row["date"])} · {html.escape(row["edition"])}</a>' for row in archive[:16])
+    quote = issue["daily_quote"]
+    quote_block = f'''<blockquote class="daily-quote"><p>“{html.escape(quote["text"])}”</p><footer>— {html.escape(quote["author"])} · <a href="{html.escape(quote["source_url"], quote=True)}" target="_blank">{html.escape(quote["source_name"])}</a></footer></blockquote>'''
     page = f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(issue["subject"])}</title><style>
-:root{{--paper:#fbfaf7;--ink:#1c1917;--soft:#57534e;--muted:#78716c;--line:#ddd8cf;--accent:#a16207;--blue:#1d4ed8}}*{{box-sizing:border-box}}html{{scroll-behavior:smooth}}body{{margin:0;background:var(--paper);color:var(--ink);font:16px/1.82 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}}main{{width:min(100% - 36px,1040px);margin:auto;padding:38px 0 70px}}header{{padding:22px 0 32px;border-bottom:1px solid var(--line)}}.brand,.label{{font-size:12px;font-weight:850;letter-spacing:.15em;color:var(--accent)}}h1,h2,h3{{font-family:Georgia,"Noto Serif SC","Microsoft YaHei",serif;letter-spacing:-.025em}}h1{{font-size:clamp(38px,7vw,68px);line-height:1.08;margin:9px 0 16px}}header>p{{max-width:760px;color:var(--soft);font-size:18px}}nav{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--line)}}nav a{{display:flex;flex-direction:column;gap:5px;padding:22px 18px;text-decoration:none;border-right:1px solid var(--line)}}nav a:first-child{{padding-left:0}}nav a:last-child{{border:0}}nav span{{color:var(--accent);font-weight:850}}nav b{{line-height:1.45}}nav small{{color:var(--muted);line-height:1.55}}.content{{width:min(100%,760px);margin:auto}}section{{padding-top:55px}}h2{{font-size:34px;margin:8px 0}}article{{padding:29px 0;border-bottom:1px solid var(--line)}}article h3{{font-size:clamp(24px,4vw,34px);line-height:1.35;margin:8px 0 15px}}article p{{margin:10px 0}}.meta{{color:var(--muted);font-size:12px}}.number{{color:var(--accent);font-weight:850;margin-right:9px}}.foot{{display:flex;justify-content:space-between;gap:16px;margin-top:17px}}.foot a{{color:var(--blue);font-weight:750;text-decoration:none}}.tags span,.archive a{{display:inline-block;padding:4px 9px;margin-right:5px;border-radius:999px;background:#eeeae2;color:var(--soft);font-size:12px;text-decoration:none}}aside{{margin:55px 0 0;padding:22px;background:#f5f3ff;border-radius:10px;color:#4c1d95}}.archive{{margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}}@media(max-width:680px){{main{{width:min(100% - 30px,1040px);padding-top:18px}}h1{{font-size:36px}}nav{{display:block}}nav a{{border-right:0;border-bottom:1px solid var(--line);padding:16px 0}}section{{padding-top:42px}}h2{{font-size:28px}}.foot{{align-items:flex-start;flex-direction:column}}}}
-</style></head><body><main><header><div class="brand">TRENDING AI · EDITED BY CODEX</div><h1>{html.escape(issue["title"])}</h1><p>{html.escape(issue["standfirst"])}</p><small>{html.escape(issue["date"])} · {html.escape(edition_label)} · {len(issue["stories"])} 条精编</small></header><nav>{guide}</nav><div class="content">{sections}<aside><b>主编手记</b><p>{html.escape(issue["editor_note"])}</p></aside><div class="archive"><div class="label">ARCHIVE</div><h2>历史日报</h2>{archive_links}</div></div></main></body></html>'''
+:root{{--paper:#fbfaf7;--ink:#1c1917;--soft:#57534e;--muted:#78716c;--line:#ddd8cf;--accent:#a16207;--blue:#1d4ed8}}*{{box-sizing:border-box}}html{{scroll-behavior:smooth}}body{{margin:0;background:var(--paper);color:var(--ink);font:16px/1.82 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}}main{{width:min(100% - 36px,1040px);margin:auto;padding:38px 0 70px}}header{{padding:22px 0 32px;border-bottom:1px solid var(--line)}}.brand,.label{{font-size:12px;font-weight:850;letter-spacing:.15em;color:var(--accent)}}h1,h2,h3{{font-family:Georgia,"Noto Serif SC","Microsoft YaHei",serif;letter-spacing:-.025em}}h1{{font-size:clamp(38px,7vw,68px);line-height:1.08;margin:9px 0 16px}}header>p{{max-width:760px;color:var(--soft);font-size:18px}}.daily-quote{{max-width:760px;margin:22px 0;padding:16px 20px;border-left:3px solid #d6a756;background:#fffaf0;color:#44403c}}.daily-quote p{{margin:0;font:italic 19px/1.7 Georgia,"Noto Serif SC","Microsoft YaHei",serif}}.daily-quote footer{{margin-top:8px;color:var(--muted);font-size:12px}}.daily-quote a{{color:inherit}}nav{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--line)}}nav a{{display:flex;flex-direction:column;gap:5px;padding:22px 18px;text-decoration:none;border-right:1px solid var(--line)}}nav a:first-child{{padding-left:0}}nav a:last-child{{border:0}}nav span{{color:var(--accent);font-weight:850}}nav b{{line-height:1.45}}nav small{{color:var(--muted);line-height:1.55}}.content{{width:min(100%,760px);margin:auto}}section{{padding-top:55px}}h2{{font-size:34px;margin:8px 0}}article{{padding:29px 0;border-bottom:1px solid var(--line)}}article h3{{font-size:clamp(24px,4vw,34px);line-height:1.35;margin:8px 0 15px}}article p{{margin:10px 0}}.meta{{color:var(--muted);font-size:12px}}.number{{color:var(--accent);font-weight:850;margin-right:9px}}.foot{{display:flex;justify-content:space-between;gap:16px;margin-top:17px}}.foot a{{color:var(--blue);font-weight:750;text-decoration:none}}.tags span,.archive a{{display:inline-block;padding:4px 9px;margin-right:5px;border-radius:999px;background:#eeeae2;color:var(--soft);font-size:12px;text-decoration:none}}aside{{margin:55px 0 0;padding:22px;background:#f5f3ff;border-radius:10px;color:#4c1d95}}.archive{{margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}}@media(max-width:680px){{main{{width:min(100% - 30px,1040px);padding-top:18px}}h1{{font-size:36px}}nav{{display:block}}nav a{{border-right:0;border-bottom:1px solid var(--line);padding:16px 0}}section{{padding-top:42px}}h2{{font-size:28px}}.foot{{align-items:flex-start;flex-direction:column}}}}
+</style></head><body><main><header><div class="brand">TRENDING AI · EDITED BY CODEX</div><h1>{html.escape(issue["title"])}</h1>{quote_block}<p>{html.escape(issue["standfirst"])}</p><small>{html.escape(issue["date"])} · {html.escape(edition_label)} · {len(issue["stories"])} 条精编</small></header><nav>{guide}</nav><div class="content">{sections}<aside><b>主编手记</b><p>{html.escape(issue["editor_note"])}</p></aside><div class="archive"><div class="label">ARCHIVE</div><h2>历史日报</h2>{archive_links}</div></div></main></body></html>'''
     (output_dir / report_name).write_text(page, encoding="utf-8")
     (output_dir / "index.html").write_text(page, encoding="utf-8")
     return report_url
