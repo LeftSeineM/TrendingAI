@@ -1,0 +1,141 @@
+{
+  "date": "2026-09-02",
+  "edition": "morning",
+  "subject": "2026年9月2日｜AI真正进入工作流，要先接上可信数据和硬边界",
+  "title": "2026年9月2日｜AI真正进入工作流，要先接上可信数据和硬边界",
+  "daily_quote": {
+    "text": "我们必须找到办法，而我们做到了。回头看，我们是世界上最幸运的人；除了成为先驱，我们别无选择。",
+    "author": "玛格丽特·汉密尔顿",
+    "source_name": "NASA：Margaret Hamilton",
+    "source_url": "https://science.nasa.gov/people/margaret-hamilton/"
+  },
+  "standfirst": "今天的应用前沿不再是给旧软件加一个聊天框。临床人员开始在同一入口检索多类公共医疗数据，手机用相机和语音帮助低视力用户理解眼前环境，企业把流程图变成可追踪的文档。共同点是：模型只有接上可信数据、嵌入原有流程，并被明确的权限、预算和复核机制约束，才会从演示变成能长期使用的工具。",
+  "editor_note": "这期应用占多数。判断一项AI能力能否进生产环境，可以按顺序问：输入来自哪里，输出落到哪一步，谁有权复核，超出预算或风险阈值时能否由系统硬性停下。模型更强固然重要，但让人敢把真实任务交出去的，往往是这些不显眼的工程细节。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "临床人员可以在一个入口检索九类公共医疗数据",
+      "teaser": "ChatGPT for Clinicians把论文、试验和药品等公开来源接进同一工作台，但明确不碰患者病历。",
+      "source": {
+        "name": "OpenAI Help Center",
+        "url": "https://help.openai.com/en/articles/6825453-chatgpt-release-notes",
+        "type": "official",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "OpenAI为美国符合资格的ChatGPT for Clinicians用户上线Healthcare Public Data。它把九个只读应用放进同一插件，覆盖生物医学研究、临床试验、药品信息、Medicare数据和医疗服务提供者记录。过去需要在多个政府或学术网站之间反复检索的问题，现在可以先在一次对话里拆分，再追到各自的公开来源。",
+        "边界写得很清楚：这些应用不访问患者病历，用户也不应把受保护的健康信息放进面向公共数据源的搜索。它适合查证背景、寻找研究或确认试验状态，不是替医生下诊断。临床人员真正值得试的是用它列出检索路径和原始链接，再回到论文、药品标签或试验登记页核对更新时间、纳入条件和结论，而不是把生成的综合回答直接写进医疗决策。"
+      ],
+      "tags": ["医疗", "公共数据", "检索工作流"]
+    },
+    {
+      "section": "lead",
+      "title": "手机AI开始帮人看清环境，也帮人记住物品放在哪里",
+      "teaser": "Android把Gemini接进无障碍视觉和Find Hub，真实价值来自相机引导与系统入口，而非多一次问答。",
+      "source": {
+        "name": "Google Android",
+        "url": "https://blog.google/products-and-platforms/platforms/android/android-drop-september-2026/",
+        "type": "official",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Android九月更新把两项Gemini能力放进具体生活动作。Guided vision允许盲人和低视力用户在Gemini Live中共享相机，系统不仅描述标签、菜单或家中物品，还会用语音提醒用户重新取景、移动镜头或把对象居中。另一项能力会把“护照放在卧室抽屉”这类文字和可选照片保存到Find Hub，以后可以直接询问或在已记录物品中查找。",
+        "两项功能都还在逐步到来。Guided vision面向运行Android 9及以上、且Gemini可用地区的手机；物品记忆要求Android 16及以上并受Gemini和Find Hub地区支持。Google同时提醒，视觉功能可能出错，不是医疗设备、出行辅助或导航工具。适合的用法是读细小文字、辨认日常物品和获得取景提示；过马路、避障、服药和其他高风险判断仍应依赖可靠的人或专用辅助设备。"
+      ],
+      "tags": ["无障碍", "Android", "日常应用"]
+    },
+    {
+      "section": "lead",
+      "title": "企业流程文档不再从空白页写起，而是从流程图自动生长",
+      "teaser": "Boomi先把集成流程解析成结构化图，再让模型写说明并比较版本，减少文档和系统实际状态脱节。",
+      "source": {
+        "name": "AWS / Boomi",
+        "url": "https://aws.amazon.com/blogs/machine-learning/how-boomi-scribe-streamlines-documentation-using-aws/",
+        "type": "primary",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Boomi披露了Scribe的实现方式：它不让模型凭开发者的一段描述自由写文档，而是先解析集成流程的XML，提取步骤、连接关系和元数据，转换为有向无环图，再交给Claude Haiku 4.5生成流程概览、图示、业务背景和逐步说明。每次修订还会比较新旧图，列出新增、修改和删除的组件，文档由此跟着流程版本一起更新。",
+        "这解决的是企业集成里很实际的交接问题：原作者离开后，别人往往只看见一串连接器和条件分支，不知道数据为何这样流动。Boomi称相关案例把文档时间最多缩短八成半，但数字来自厂商案例，不能视为所有流程都能复制。可借鉴的做法不是简单地“让AI写文档”，而是先把可验证的结构、版本和字段作为输入契约，再让人抽查业务意图、异常路径和模型补出的解释。"
+      ],
+      "tags": ["企业软件", "技术文档", "流程自动化"]
+    },
+    {
+      "section": "use",
+      "title": "给团队开放高级模型前，先做一条不会突然断工的预算护栏",
+      "teaser": "Jamf按个人用量逐级限制昂贵模型，同时保留低成本模型和有时限的例外通道。",
+      "source": {
+        "name": "AWS / Jamf",
+        "url": "https://aws.amazon.com/blogs/machine-learning/tokenomics-at-scale-how-jamf-built-real-time-spend-enforcement-for-amazon-bedrock/",
+        "type": "primary",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Jamf把Bedrock调用日志按用户和模型换算成当日成本，每十五分钟检查一次：达到示例预算的八成时先停用Opus，达到百分之百时再停用Sonnet，但始终保留较便宜的Haiku；限制会在次日自动解除，确有大任务的人可以申请带到期时间的例外。团队今天就能照着做一个简化版：先让用量按人可见，设置逐级而非一刀切的阈值，提前通知，再保留一个能继续完成基本工作的低成本选项。价格表和新模型必须同步维护，否则统计会失真；预算护栏也只能控制花费，不能证明产出的代码有价值。"
+      ],
+      "tags": ["AI成本", "团队管理", "可执行方法"]
+    },
+    {
+      "section": "think",
+      "title": "长任务模型变得更可用，选择标准也该从跑分转向交付过程",
+      "teaser": "Claude Fable 5.1主打跨应用和数小时任务，但价格、数据留存与复核成本决定它适合哪些工作。",
+      "source": {
+        "name": "Anthropic",
+        "url": "https://www.anthropic.com/claude/fable",
+        "type": "official",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Anthropic称Fable 5.1面向数小时、跨多个应用的长任务，已经向Pro、Max、Team和Enterprise用户开放，也可通过API及多家云平台使用。API价格为每百万输入令牌十美元、输出五十美元；默认要求保留三十天数据用于安全监测，符合条件的企业在EFS可用前可使用零数据留存安排。",
+        "这次真正需要比较的不是一张总榜，而是模型在长时间运行中能否持续报告进度、失败后恢复、自己做验证，并留下让人复核的证据。厂商列出的客户案例和内部评测说明它可能适合跨代码库开发、复杂研究和文档密集工作，但不能代替团队自己的任务集。先拿一个有明确验收条件、允许回滚的长任务做对照测试，同时记录总成本、人工接管次数和最终缺陷，比直接把日常工作全部迁过去更稳妥。"
+      ],
+      "tags": ["模型能力", "长任务", "评测"]
+    },
+    {
+      "section": "think",
+      "title": "医疗AI扩不起来，问题往往先出在数据没有连通",
+      "teaser": "微软调查与医院案例都指向同一现实：模型之前先要解决系统碎片、口径和治理。",
+      "source": {
+        "name": "Microsoft Cloud Blog",
+        "url": "https://www.microsoft.com/en-us/microsoft-cloud/blog/healthcare/2026/09/01/from-ai-readiness-to-impact-why-a-strong-data-foundation-determines-success-in-healthcare/",
+        "type": "official",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "微软委托OnePoll调查七个国家五百名大型医疗机构决策者，九成七受访者称数据孤岛已影响及时诊疗，约六成二把旧系统视为主要碎片来源。文章还列出Peterborough Regional Health Centre连接十八个生产系统后的案例：等待住院床位时间下降四成三，不必要检验按季度下降两成。",
+        "这些结果来自厂商委托调查和客户案例，不能把改善全部归因于AI，更不能直接外推到小型医院。但它提醒采购者把试点顺序倒过来：先统一患者、床位、检验和财务数据的定义与访问权限，再决定代理可以读取和建议什么。否则模型越会回答，越可能把不一致的数据包装成更有说服力的错误。"
+      ],
+      "tags": ["医疗", "数据治理", "落地实践"]
+    },
+    {
+      "section": "quick",
+      "title": "前沿模型的安全监测开始把数据和复核权留在客户一侧",
+      "teaser": "Anthropic的EFS把日志放进客户云账户，警报由客户人员处理；目前仍是分阶段开放计划。",
+      "source": {
+        "name": "Anthropic",
+        "url": "https://www.anthropic.com/news/enterprise-frontier-safeguards",
+        "type": "official",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Anthropic公布Enterprise Frontier Safeguards：企业可把监测数据存进自有云账户并使用自管密钥，自动系统跨会话寻找严重滥用迹象，警报交给客户自己的人员复核，不要求Anthropic员工查看。存储、自管密钥和自动审查均可选，服务本身不收费，但云存储和流量另计。EFS要到今年秋季才分阶段推出，现在可申请而不能视为普遍可用。"
+      ],
+      "tags": ["企业安全", "数据控制"]
+    },
+    {
+      "section": "quick",
+      "title": "机器人训练正在补一块摄像头看不见的手部数据",
+      "teaser": "Wetour用肌电腕带配合第一视角相机记录动作和用力，但关键校准仍在验证。",
+      "source": {
+        "name": "Wetour Robotics",
+        "url": "https://www.globenewswire.com/news-release/2026/09/01/3354055/0/en/wetour-robotics-demonstrates-semg-vision-system-targeting-force-and-occlusion-blind-spots-in-physical-ai-training.html",
+        "type": "primary",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Wetour展示用八通道表面肌电腕带和第一视角相机共同采集手部示范：相机给出位置和场景，肌电在手被遮挡时仍能提供肌肉活动信号，并尝试估计抓握力度。它针对的是机器人模仿学习里“看见动作却不知道用了多大力”的缺口。不过这是开发演示，跨模态纠错仍在验证，用真实腕带完成力度校准也尚未完成，离可复现训练方案还有距离。"
+      ],
+      "tags": ["具身智能", "机器人数据", "开发演示"]
+    }
+  ]
+}
