@@ -1,0 +1,154 @@
+{
+  "date": "2026-09-03",
+  "edition": "morning",
+  "subject": "2026年9月3日｜AI应用开始把自由发挥关进可验证的流程",
+  "title": "2026年9月3日｜AI应用开始把自由发挥关进可验证的流程",
+  "daily_quote": {
+    "text": "科学是我们理解得足够透彻、因而能够向计算机解释的部分；艺术则是我们所做的其余一切。",
+    "author": "唐纳德·克努特",
+    "source_name": "斯坦福大学课程材料引自《A=B》前言",
+    "source_url": "https://web.stanford.edu/~cbl/ssea/lectures/04-intro-images/slides"
+  },
+  "standfirst": "今天最有意思的变化，不是模型又学会一项孤立技能，而是应用团队开始认真划分自由发挥与必须精确的边界：购物代理只能报目录里的价格，客服把退款资格交给规则节点，企业知识代理要通过回放测试才能吸收专家纠正。AI正在进入交易、客服和内部决策，但能否留下证据、允许复核，决定它是演示还是工作系统。",
+  "editor_note": "这期应用占绝对多数。把AI接进真实业务时，可以先在流程图上用两种颜色标记：哪里允许模型理解意图和组织语言，哪里必须由数据库、权限或业务规则给出唯一答案。后者越模糊，代理越能干，错误造成的代价反而越大。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "购物代理不只推荐商品，也开始把购物车交回结账页",
+      "teaser": "Anthropic公开可运行的购物与商家代理蓝图，价格、退款和上架动作都被硬边界约束。",
+      "source": {
+        "name": "Claude by Anthropic",
+        "url": "https://claude.com/blog/claude-for-commerce-agents",
+        "type": "official",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "Anthropic发布一套商业代理蓝图，提供购物代理和商家代理的可运行参考实现，覆盖零售、旅行、电信与票务。消费者可以用自然语言提出多件商品需求，代理检索目录、比较选择、组成购物车，再把人送回现有结账流程；商家侧则能查询销售和库存、草拟促销方案。代码可接Claude API、Bedrock、Microsoft Foundry或Vertex AI，也提供Claude Code插件和在线演示。",
+        "它没有把“会聊天”当作交易权限。价格和商品必须来自真实目录，购物车与退款设有硬限制，超出范围转给人；商家代理默认只暂存修改，人在发布前批准。更重要的边界是：这是一套由采用者自行分叉和维护的开放参考实现，不是带服务等级承诺的托管产品，演示后仍要自己连接目录、身份、库存和支付，并针对本店规则做测试。对电商团队，先在一类低风险商品上测试“找齐一套东西”是否比搜索框更省步骤，比直接放开自动改价更实际。"
+      ],
+      "tags": ["电商", "购物代理", "人工审批"]
+    },
+    {
+      "section": "lead",
+      "title": "企业知识库真正要保存的，是专家怎样作判断",
+      "teaser": "Meta把事实、分析步骤和纠错测试拆成独立层，让一次专家修正成为可审计的长期记忆。",
+      "source": {
+        "name": "Engineering at Meta",
+        "url": "https://engineering.fb.com/2026/09/02/ml-applications/organizational-second-brain-ai-learns-from-experts/",
+        "type": "primary",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "Meta公开了一套用于合规评估的“组织第二大脑”。它没有把成千上万份文档全部塞进向量库，而是把高频的立场、边界与决策框架整理成可读文本，再把专家的分析顺序写成独立的流程配方；低频资料才交给检索。这样，当答案出错时，团队能分清是事实缺失、分析方法有问题，还是专家之间本来就存在分歧。",
+        "每次专家纠正会先追到根因，再生成最小文件修改；独立代理只看差异做对抗审查，结构检查器查断链和依赖循环，原失败案例随后重放，并进入回归测试。Meta称该系统把单次评估从数天缩到数分钟，但结果来自内部一个合规领域，不能直接外推。可复用的经验很具体：先把“我们知道什么”和“我们怎样判断”分开版本管理，再设置必须让专家确认的检查点；如果只是把旧文档接入聊天框，组织往往只得到更快的搜索，而不是更稳定的专业判断。"
+      ],
+      "tags": ["企业知识", "专家工作流", "可验证更新"]
+    },
+    {
+      "section": "lead",
+      "title": "客服AI开始在同一张流程图里区分对话与决定",
+      "teaser": "Amazon Connect让模型负责理解和表达，让身份验证、补偿资格与合规话术继续由规则决定。",
+      "source": {
+        "name": "AWS Contact Center",
+        "url": "https://aws.amazon.com/blogs/contact-center/blend-structured-business-logic-with-agentic-ai/",
+        "type": "official",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "Amazon Connect Customer的agentic CX designer现已正式可用。它把两类节点放在同一个无代码画布上：生成式节点理解用户意图、追问情况并从批准的知识中组织回答；确定性节点用字段类型、正则、重试次数和明确规则处理身份验证、补偿资格、金额与合规披露。对外部系统既可调用REST接口，也可连接远程MCP工具，失败时能重试、走备用路径或转人工。",
+        "这种分工比“让模型把整通电话做完”更接近真实客服。模型可以听懂抱怨并自然解释停机原因，但是否有资格退款、退多少，不由模型临场发挥；转人工后，对话状态、已取字段和调用记录一起交接，顾客不必从头再说。发布前还能用模拟通话测试完整路径，构建不可变版本并保留回滚。AWS文章里的运营商与顾客是说明产品的虚构场景，不是客户成效案例；团队应从一条规则清楚、可人工兜底的流程开始，并先测试最昂贵的错误路径。"
+      ],
+      "tags": ["客户服务", "规则引擎", "流程设计"]
+    },
+    {
+      "section": "use",
+      "title": "Notebook的额度不再每天清零，可以把重任务排到稍后",
+      "teaser": "Gemini Notebook开始按任务耗算力，并允许视频或幻灯片在额度恢复后自动继续生成。",
+      "source": {
+        "name": "Google Gemini Notebook",
+        "url": "https://blog.google/innovation-and-ai/products/gemini-notebook/new-flexible-usage-limits/",
+        "type": "official",
+        "published_at": "2026-08-28"
+      },
+      "body": [
+        "Gemini Notebook从九月二日起向网页和移动端个人账户逐步推送弹性额度：限制改为每五小时刷新，并综合提示复杂度、对话长度、来源数量和输出类型计算。若视频概览或幻灯片超出当前额度，可以延后排队，额度恢复后自动生成并通知。经常拿它整理课程或报告的人，可以先完成检索、问答和提纲，把高耗算力的成品放进延后队列；但额度不再是固定次数，也意味着不同任务消耗更难凭感觉预估，提交前仍要检查应用显示的剩余额度。"
+      ],
+      "tags": ["学习工具", "算力额度", "工作安排"]
+    },
+    {
+      "section": "use",
+      "title": "长视频分析不必再从头到尾按固定帧率吞一遍",
+      "teaser": "Gemini API让模型按问题主动定位片段、重看快动作，适合先做片段检索和异常初筛。",
+      "source": {
+        "name": "Google DeepMind",
+        "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-agentic-video-in-gemini/",
+        "type": "official",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Google已在Gemini 3.7 Flash、3.6 Flash和3.5 Flash-Lite的API中开放主动式视频理解。传统做法按固定帧率抽取整段视频；新模式会根据问题在画面、音频和字幕之间选择信号，先快速扫描，再对可疑片段提高帧率重看。开发者现在可以在AI Studio或企业平台把视频处理设为agentic，尝试多小时课程中的关键片段检索、快速动作计数或异常初筛。厂商公布的令牌、成本和准确率提升来自其测试集，具体素材仍需自测；剪辑点、安防事件和质量缺陷都应保留人工复核。"
+      ],
+      "tags": ["视频理解", "开发接口", "内容工作流"]
+    },
+    {
+      "section": "think",
+      "title": "更强的网络防御模型先进入受限名单，而不是公开市场",
+      "teaser": "Google用人员范围和账号安全条件限制Gemini网络安全能力，显示双用途模型需要分级发布。",
+      "source": {
+        "name": "Google Security",
+        "url": "https://blog.google/innovation-and-ai/technology/safety-security/fairwind-program/",
+        "type": "official",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "Google启动Fairwind受限访问计划，把Gemini 3.8 Flash Cyber与CodeMender交给部分政府、云客户和安全合作伙伴，用于发现、验证并修补漏洞。参与机构必须把访问限制在内部安全、事件响应或渗透测试人员，并启用多因素认证等措施；普通Google Cloud客户仍可用公开模型配合CodeMender，但拿不到同一级能力。这里的关键不是厂商宣称几分钟能产出补丁，而是先进网络能力正采用“先给防守者、限定身份和用途”的分级路径。补丁即使由系统验证，也仍应经过代码审查、隔离测试和变更审批，不能把受限访问误解为自动修复已无风险。"
+      ],
+      "tags": ["网络安全", "分级访问", "双用途AI"]
+    },
+    {
+      "section": "quick",
+      "title": "Copilot Studio把更长的代理任务交给新的执行框架",
+      "teaser": "GitHub Copilot harness已正式可用，可调用技能、记忆、文件和企业工具，并在沙箱中运行。",
+      "source": {
+        "name": "Microsoft Copilot Blog",
+        "url": "https://www.microsoft.com/en-us/microsoft-copilot/blog/copilot-studio/new-and-improved-github-copilot-harness-agent-skills-and-richer-context/",
+        "type": "official",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "Microsoft在Copilot Studio正式开放GitHub Copilot harness。它位于模型与业务流程之间，决定何时调用模型、装入哪些上下文以及使用技能、MCP工具或其他代理，还能在受控沙箱中创建和编辑Word、Excel、PowerPoint与PDF。它适合发票核对、补资料和异常审批等多步任务；上线前仍要逐项限制工具权限与审批点。"
+      ],
+      "tags": ["企业代理", "办公流程"]
+    },
+    {
+      "section": "quick",
+      "title": "医疗软件团队开始把行业约束直接接进编程助手",
+      "teaser": "Interlay通过MCP提供医疗合规和临床流程背景，但目前公开入口仍是申请演示。",
+      "source": {
+        "name": "HTD Health",
+        "url": "https://www.prnewswire.com/news-releases/htd-health-launches-interlay-to-bring-healthcare-context-to-ai-powered-software-development-302866676.html",
+        "type": "primary",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "HTD Health发布Interlay，用MCP把医疗法规、安全标准、临床流程和客户私有产品背景接入团队已有的编码与产品工具，并提供基线评估。思路是让约束在需求和代码阶段出现，减少临上线才返工。不过目前官网入口是申请演示，成效数字、支持工具与定价尚未公开，不能按成熟通用产品采购。"
+      ],
+      "tags": ["医疗软件", "开发工具"]
+    },
+    {
+      "section": "quick",
+      "title": "语音客服代理新增的能力，一部分今天能用，一部分仍在日程表上",
+      "teaser": "Genesys已开放新动作模型、开发工具和Deepgram接入；原生语音与跨平台协作要等后续季度。",
+      "source": {
+        "name": "Genesys",
+        "url": "https://www.genesys.com/company/newsroom/announcements/genesys-enhances-agentic-virtual-agent-amid-growing-enterprise-adoption",
+        "type": "official",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "Genesys为Agentic Virtual Agent加入APT-2动作模型、新开发工具和Deepgram语音识别，这些已可用；ElevenLabs计划在十月底前接入，原生语音改进、A2A跨平台代理协作和AI辅助编排则预计十一月至明年一月开放。采购时应把现成功能与路线图分开验收，厂商客户的节省和满意度数字也不能代替自己的转人工率与误操作测试。"
+      ],
+      "tags": ["语音客服", "产品状态"]
+    }
+  ]
+}
