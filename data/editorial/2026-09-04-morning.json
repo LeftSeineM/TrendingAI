@@ -1,0 +1,139 @@
+{
+  "date": "2026-09-04",
+  "edition": "morning",
+  "subject": "2026年9月4日｜AI开始走出聊天框，进入真实工作台",
+  "title": "2026年9月4日｜AI开始走出聊天框，进入真实工作台",
+  "daily_quote": {
+    "text": "如果你不研究一个重要的问题，就不太可能做出重要的工作。",
+    "author": "理查德·哈明",
+    "source_name": "贝尔通信研究《You and Your Research》演讲实录",
+    "source_url": "https://tianyin.github.io/misc/you_and_your_research.pdf"
+  },
+  "standfirst": "今天的主线不是模型又会回答多少问题，而是AI开始接管工作里最难自动化的中间步骤：客服代理进入没有接口的旧网页，临床试验工具把异常筛查嵌进受监管流程，设计与游戏团队让模型直接操作画布和引擎。能力更强固然重要，但产品是否给出权限、回放、人工复核与真实入口，才决定它能否从演示进入日常工作。",
+  "editor_note": "这期可以用一个问题筛选AI应用：它只是把答案写得更漂亮，还是确实减少了系统之间的搬运、核对和等待？越接近真实操作，越要先画清楚权限边界、失败后的恢复路径，以及哪一步必须由人作最后决定。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "客服代理开始操作那些永远等不到接口的旧网站",
+      "teaser": "Yuma让客服AI进入承运商、仓库和后台网页，把对话后的手工录入也接进流程。",
+      "source": {
+        "name": "Yuma AI",
+        "url": "https://yuma.ai/blogs/yuma-ai-launches-web-actions-browser-automation",
+        "type": "official",
+        "published_at": "2026-09-02"
+      },
+      "body": [
+        "电商客服常见的断点并不在回答，而在回答之后：员工还得登录承运商门户，抄入订单号和金额、上传凭证、翻过几页表单，再把结果写回工单。Yuma发布的Web Actions让客服代理在真实Chrome浏览器里完成这些步骤，可处理理赔、库存调整和订阅暂停等没有API的任务，并把确认编号或结果带回原工单。",
+        "现有客户需要向客户经理提交任务说明和一次完整操作的录屏或文档；系统先把流程拆成步骤、识别每次变化的字段，并在发布前做只读探索。边界也很明确：目前只能访问开放互联网中的网页，内网或VPN后的系统不在范围内。团队最适合先挑一个低金额、可撤销、每天重复的录入任务试跑，逐项检查账号权限、页面改版和失败恢复；涉及退款、删改库存或外发信息的动作，仍应设置金额阈值和人工批准。"
+      ],
+      "tags": ["客户服务", "浏览器代理", "旧系统"]
+    },
+    {
+      "section": "lead",
+      "title": "临床试验AI不替医生下结论，先接过三类重复审查",
+      "teaser": "CluePoints把异常查询、安全复核和医学编码正式推向生产，但专业人员仍保留批准权。",
+      "source": {
+        "name": "CluePoints",
+        "url": "https://cluepoints.com/cluepoints-launches-iqd-msr-imc-clinical-data-review/",
+        "type": "official",
+        "published_at": "2026-09-03"
+      },
+      "body": [
+        "临床试验的数据团队过去要在分散系统里反复找矛盾、核对安全事件，再把研究者填写的自由文本映射到标准医学词典。CluePoints宣布三项能力正式可用：智能查询检测筛出真正需要追问的数据异常，医学与安全审查把周期性复核整理成可追踪流程，智能医学编码则给出MedDRA和WHODrug候选。三者与一家全球前十大药企共同开发，厂商称已进入该客户多数在研项目。",
+        "这类产品的价值不是让模型代替医学判断，而是把专业人员的注意力从全量浏览移到少数可疑记录。以编码为例，系统给出排序建议，每一项仍由编码团队批准，词典和企业规则保持权威。当前是面向药企和合同研究组织的企业产品，公开页面没有自助入口与价格；准确率、节省工时和大规模研究表现主要来自厂商资料。采购者应要求按自己的研究数据盲测，并检查误报、漏报、审计轨迹和人工覆盖，而不是只看总体命中率。"
+      ],
+      "tags": ["临床试验", "医学编码", "人工复核"]
+    },
+    {
+      "section": "lead",
+      "title": "GPT-6 Astra把竞争焦点推向完整电脑任务",
+      "teaser": "新模型强调浏览器、代码和专业软件中的多步执行，但高价格与分批开放限制了普及速度。",
+      "source": {
+        "name": "OpenAI Developers",
+        "url": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+        "type": "official",
+        "published_at": "2026-09-03"
+      },
+      "body": [
+        "OpenAI发布GPT-6 Astra，把重点从单轮回答移到跨代码、浏览器和专业软件完成多步工作。官方模型页列出电脑操作、研究、文档创建、结构化输出和工具调用等能力，上下文窗口为一百零五万token。它先向可信访问计划中的企业开放，API以及Plus、Pro、Business和Enterprise用户将在随后数日分批获得，因此今天在模型列表里看不到并不等于账号异常。",
+        "能力提升并没有消除成本和验证问题。API每百万输入token十美元、输出token五十美元，提示超过二十七万二千token后整段请求还会提高计价；把所有资料一次性塞进去，可能比先检索再执行昂贵得多。真正有意义的测试也不该只是问一道难题，而应选一项半天能人工完成的完整任务，记录成功率、人工接管次数、总成本与可审计产物。发布方的基准和早期客户案例提供线索，尚不能证明它能在所有工作环境中稳定自主运行。"
+      ],
+      "tags": ["基础模型", "电脑操作", "成本"]
+    },
+    {
+      "section": "use",
+      "title": "手里已有RTX电脑，可以先免费测一次本地代理",
+      "teaser": "现有推理优化今天即可更新，多台电脑协同与新硬件则仍处在预览或等待上市阶段。",
+      "source": {
+        "name": "NVIDIA Blog",
+        "url": "https://blogs.nvidia.com/blog/local-ai-ifa-next-gen-agents-nv-pair-rtx-spark/",
+        "type": "official",
+        "published_at": "2026-09-03"
+      },
+      "body": [
+        "NVIDIA在IFA公布一组本地AI更新：llama.cpp和vLLM的新优化已经发布，并进入LM Studio与Ollama；厂商称部分场景推理速度最高提升一点九倍。Hermes Agent、OpenClaw和Perplexity Portable Computer的简化支持仍在到来途中，能在家庭局域网分配推理任务的PAIR也不应视作成熟通用方案，搭载RTX Spark的新电脑要到十月上市。已有RTX设备的读者无需先买新机：更新一个常用运行器，用同一模型和提示比较首字延迟、显存、整项任务耗时与答案质量，再决定本地隐私和离线能力是否值得维护成本。"
+      ],
+      "tags": ["本地AI", "RTX", "动手测试"]
+    },
+    {
+      "section": "use",
+      "title": "设计师可以把一次提示变成团队可复用的小工具",
+      "teaser": "Figma开放动画着色器、代码查看和发布能力，重点从生成一张图转向沉淀设计方法。",
+      "source": {
+        "name": "Figma Blog",
+        "url": "https://www.figma.com/blog/how-we-built-generative-plugins-and-shaders/",
+        "type": "primary",
+        "published_at": "2026-09-01"
+      },
+      "body": [
+        "Figma的生成式插件与着色器现在能加入动画、鼠标交互，查看并下载生成代码，还可发布到社区；组织内部私有发布只面向Organization和Enterprise套餐。着色器仍是开放测试，使用WebGPU，性能和功能可能变化；设计代理在测试期免费，但官方已说明数周后会消耗AI额度。比起让代理再生成一张不可复用的效果图，更实用的做法是选团队反复手调的渐变、噪点或版式检查，把输入参数和可接受范围说清，让代理做成带控件的小工具，再由设计师检查极端尺寸、品牌规范和导出后的React表现。"
+      ],
+      "tags": ["设计工具", "可复用工作流", "开放测试"]
+    },
+    {
+      "section": "use",
+      "title": "游戏原型的AI流程开始包含试玩和自检",
+      "teaser": "Playco让模型直接进入Unity和Godot，从同一灰盒生成多个方向，再通过运行结果继续修正。",
+      "source": {
+        "name": "OpenAI Customer Story",
+        "url": "https://openai.com/index/playco-game-prototyping-with-astra/",
+        "type": "primary",
+        "published_at": "2026-09-03"
+      },
+      "body": [
+        "Playco在自家的Playbot开发环境中把模型接入Unity和Godot，使它不只写脚本，还能编辑场景、运行游戏、发现问题再修改。团队先做一个玩法稳定的灰盒，再让GPT-6 Astra生成三个不同主题版本；公司报告多数版本首次即可运行，人工修正比上一代模型减少一半。这个数字来自单一厂商与客户的受控案例，不等于完整项目工期减半。可借鉴的是流程顺序：先固定玩法与验收条件，再并行生成视觉方向，让代理实际运行并留下失败记录，最后由人比较手感、性能和取舍，而不是直接用一句提示要求“做完整游戏”。"
+      ],
+      "tags": ["游戏开发", "原型", "自我测试"]
+    },
+    {
+      "section": "think",
+      "title": "生物设计正在把模型输出接回湿实验循环",
+      "teaser": "西雅图多家研究机构要开放模型、数据和实验工具，但现在仍是长期科研平台而非治疗产品。",
+      "source": {
+        "name": "Allen Institute",
+        "url": "https://alleninstitute.org/news/ai-biodesign-accelerator-combines-experimental-biology-and-artificial-intelligence-to-learn-natures-design-rules",
+        "type": "research",
+        "published_at": "2026-09-03"
+      },
+      "body": [
+        "Allen Institute、华盛顿大学和Fred Hutch宣布成立AI BioDesign协作项目，计划建设开放模型、数据集、实验测定与工具。它的核心不是让模型直接宣告一种新蛋白有效，而是形成“设计—构建—测量—学习”循环：模型提出候选，实验室批量制造和测试，失败与成功结果再回流训练。这个结构把生物学里最昂贵的验证环节放在模型外部，也可能为疾病靶点、基因调控和新材料提供公共基础设施。当前公布的是研究计划和平台方向，没有可供患者使用的疗法，也没有临床有效性结论；真正的进展要看后续是否按承诺开放数据，以及实验迭代能否稳定提高命中率。"
+      ],
+      "tags": ["生物设计", "开放科学", "实验验证"]
+    },
+    {
+      "section": "quick",
+      "title": "企业版云端代理开始提供账号、网络与审计控制",
+      "teaser": "Grok Bot面向企业开放，每个机器人使用独立云电脑；现阶段仍需销售接洽和谨慎授权。",
+      "source": {
+        "name": "SpaceXAI",
+        "url": "https://x.ai/news/grok-bot-for-enterprise",
+        "type": "official",
+        "published_at": "2026-09-03"
+      },
+      "body": [
+        "Grok Bot现面向企业提供，每个机器人运行在独立云电脑，可学习一次示范后执行销售、招聘或代码巡检等任务，并新增访问、网络和审计控制。Grok与Cursor Enterprise客户可免费使用两周，其他企业需联系销售，公开入口目前为macOS下载。厂商案例不能替代权限测试；首次试用应只登录沙箱账号，先让机器人起草和汇总，不立即赋予外发、采购或合并代码的权限。"
+      ],
+      "tags": ["企业代理", "云电脑", "权限"]
+    }
+  ]
+}
