@@ -1,0 +1,139 @@
+{
+  "date": "2026-09-10",
+  "edition": "morning",
+  "subject": "2026年9月10日｜AI进入工作流，控制权比聊天能力更重要",
+  "title": "2026年9月10日｜AI进入工作流，控制权成为产品",
+  "daily_quote": {
+    "text": "如果我们借助机器实现目的，就最好先确定：交给机器的目的，正是我们真正想要的。",
+    "author": "诺伯特·维纳",
+    "source_name": "《自动化的一些道德与技术后果》（Science，1960）",
+    "source_url": "https://www.science.org/doi/10.1126/science.131.3410.1355"
+  },
+  "standfirst": "今天的AI不只在回答问题，而是在健康管理、代码修复、视频制作和团队协作里接管一段真实流程。随之变得稀缺的不是又一个聊天入口，而是可选择的模型、可信的共享记忆、明确的业务规则和最后一道人工确认。产品越能动手，我们越要看清它依据什么、能做到哪一步，以及出错后怎样收回来。",
+  "editor_note": "今天可以挑一条已经交给AI的工作流，补上三个问题：它读取的事实由谁维护，产生的动作由谁批准，失败怎样被发现和撤销。自动化率不必先追求最高；先把事实来源、权限和回滚做清楚，省下来的时间才不会在事后核对里加倍还回去。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "苹果把健康数据变成解释，但不是把手表变成医生",
+      "teaser": "新版健康功能会解释长期变化并给出健康年龄，首批能力、设备与地区限制需要分开看。",
+      "source": {
+        "name": "Apple Newsroom",
+        "url": "https://www.apple.com/newsroom/2026/09/apple-advances-health-and-fitness-capabilities-using-apple-intelligence/",
+        "type": "official",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "苹果为Apple Watch Series 12和Ultra 4加入新的健康感知系统：心率可每五秒测一次，心率变异性最频繁可每五分钟估算一次，系统再把活动、生命体征和睡眠合成0到10的准备度。重新设计的健康App会用Apple Intelligence解释趋势，并给出健康年龄，而不是只把更多曲线摆在屏幕上。苹果还宣布可在美国约两千个Quest网点预约一组超过50项指标的实验室检测，价格为119美元。",
+        "这些能力并非同时、普遍可用。watchOS 27将于9月14日发布，新的健康App稍晚才从美国英语开始；部分功能受设备、地区、语言和年龄限制。苹果称其研究比较了超过一千名参与者与主流穿戴设备的结果，但这是厂商主导的验证，不等于独立临床证据。对普通用户，合理用法是借它发现长期变化，再把异常带给医生讨论；Vitals只用于健康管理，不能替代诊断，周期追踪也不能用作避孕工具。"
+      ],
+      "tags": ["应用前沿", "健康", "可穿戴设备"]
+    },
+    {
+      "section": "lead",
+      "title": "GitHub让代理批量修代码，审查者要重新决定看什么",
+      "teaser": "一次可把最多25个代码质量问题交给Copilot修复，但生成的分支和PR仍要由人验收。",
+      "source": {
+        "name": "GitHub Changelog",
+        "url": "https://github.blog/changelog/2026-09-09-remediate-code-quality-findings-with-agentic-autofix/",
+        "type": "official",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "GitHub的代码质量页面现在可以一次选择最多25个标准问题，批量交给Copilot处理。代理会在独立分支修改代码、检查结果并创建拉取请求，替代过去逐条点击“生成修复”的方式。它沿用企业已有的Code Quality策略，但会消耗AI额度；前提是仓库启用了GitHub Code Quality，并使用Team或Enterprise Cloud套餐，包括数据驻留版本。",
+        "变化不只是修得更快，也会改变审查工作的重心。面对一批由代理同时改动的文件，审查者更需要先看测试覆盖、行为差异和安全边界，再看代码风格；否则“25项已处理”很容易被误当成“25项已证实修好”。适合的起点是重复、低风险并且有自动化测试的问题，例如空值处理或明确的静态规则。涉及鉴权、数据迁移和并发语义的修改，仍应拆小提交，让人能逐步验证和回滚。"
+      ],
+      "tags": ["应用前沿", "软件开发", "代码审查"]
+    },
+    {
+      "section": "lead",
+      "title": "团队AI开始拥有共同记忆，关键是它如何忘记",
+      "teaser": "WRITER把会议、聊天和项目经验组织成团队上下文，同时公开了记忆晋升与追溯规则。",
+      "source": {
+        "name": "WRITER",
+        "url": "https://writer.com/blog/enterprise-brain/",
+        "type": "official",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "WRITER推出Enterprise Brain，希望让营销、销售和运营代理共享同一套组织上下文。会议、Slack或Teams中的决定可以进入Agent Memory，再与品牌规范、合规规则和获批素材一起供代理调用。Agent Memory、WRITER Meet和Slack接入已向客户开放，Teams仍是早期访问，品牌与合规模块则在逐步推出；管理员可控制哪些团队和代理能读取哪些内容。",
+        "它的工程说明比“AI记住一切”更有价值：新信息可新增、更新、删除或与旧信息匹配，被取代的版本保留关联而非直接覆盖；个人日程等细节不会自动升为团队记忆，相似经验通常要由三名用户分别出现后才会晋升，并留下来源供审计。厂商尚未公开计划中的记忆基准，因此效果仍需真实团队验证。试用时先选规则稳定、错误可发现的场景，并安排内容负责人定期删除过期事实；共享记忆最大的风险，不是AI忘了，而是所有人一起相信了一条已经失效的旧规则。"
+      ],
+      "tags": ["能力前沿", "团队协作", "代理记忆"]
+    },
+    {
+      "section": "use",
+      "title": "视频生成进入时间线，创作者少了一次工具搬运",
+      "teaser": "Premiere可在项目内生成画面、音效和音乐，After Effects也加入了项目级AI助手。",
+      "source": {
+        "name": "Adobe Blog",
+        "url": "https://blog.adobe.com/en/publish/2026/09/08/generate-create-directly-in-your-timeline-with-new-ai-powered-innovations-in-premiere-after-effects",
+        "type": "official",
+        "published_at": "2026-09-08"
+      },
+      "body": [
+        "Adobe把生成式工具直接放进Premiere时间线：用户可用项目里的参考帧生成视频，模型可选Firefly、Google Veo、Kling、Runway或Luma；音效由Adobe模型生成，Soundscape会分析最长15秒的片段，生成音乐仍处测试阶段。对话增强、串音分离和自动压低背景音乐也进入公开测试。After Effects的AI Assistant则能跨整个项目整理图层、查错和生成表达式。官方称这些功能已经开放，但多项仍是beta，套餐和账号资格需在产品内确认。最实用的做法是先用它填补转场、临时音效和粗剪，再保存原素材与版本；不同模型的授权范围、人物一致性和文字细节仍要逐项检查。"
+      ],
+      "tags": ["应用前沿", "视频创作", "工作流"]
+    },
+    {
+      "section": "use",
+      "title": "多哈机器人出租车开始收费，但司机还没有离开",
+      "teaser": "乘客可通过Karwa应用叫车，商业试点仍配安全员；无人驾驶演示是另一件事。",
+      "source": {
+        "name": "Pony.ai",
+        "url": "https://blog.pony.ai/pony-ai-highlights-progress-of-doha-robotaxi-commercial-operations-at-aemob-forum/",
+        "type": "official",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "Pony.ai披露，其与Mowasalat在多哈的Robotaxi商业试点已经可以通过Karwa应用付费叫车，范围覆盖老多哈、西湾、部分景点及机场连接线路。道路测试始于2025年8月，收费试点从同年12月开始。必须分清两个状态：当前商业服务车内仍有受训安全员；论坛现场展示的第七代车辆可以无安全员运行，只是一场演示，不代表所有付费路线已经完全无人化。人在多哈可把它当作一项有限区域的出行选择，预约前查看上车点和运营范围；其他地区的读者更应关注监管、接管和事故责任怎样随“收费运营”一起落地，而不是把一次演示当成全面开放。"
+      ],
+      "tags": ["应用前沿", "自动驾驶", "出行"]
+    },
+    {
+      "section": "use",
+      "title": "Notion允许管理员限制模型，选择权进入公司策略",
+      "teaser": "工作区可以分别控制普通代理与自定义代理能用哪些模型，并为后者设置默认模型。",
+      "source": {
+        "name": "Notion",
+        "url": "https://www.notion.com/releases/2026-09-09",
+        "type": "official",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "Notion工作区所有者现在可以分别限定Notion Agent和Custom Agents可用的模型，并为自定义代理指定默认模型，入口在设置中的Notion AI通用选项。它让企业不必把成本、合规和效果选择留给每个员工临时决定。公告没有列出具体套餐、地区或模型差异，管理员应先在自己的工作区确认权限。落地时不要只保留“最强”的一个模型：可按文案、检索和高风险数据处理划分允许范围，记录质量、延迟与单次成本，再决定默认值，同时为关键流程保留经过验证的备选模型。"
+      ],
+      "tags": ["应用前沿", "知识管理", "模型治理"]
+    },
+    {
+      "section": "think",
+      "title": "真实交易代理的教训：界面和护栏比策略名更重要",
+      "teaser": "一项生产环境研究分析数千个用户资金账户，发现风险设置对行为的影响超过策略描述。",
+      "source": {
+        "name": "arXiv",
+        "url": "https://arxiv.org/abs/2609.05663",
+        "type": "research",
+        "published_at": "2026-09-04"
+      },
+      "body": [
+        "一篇预印本分析了DX Terminal Pro的3505个用户出资账户和另一套多代理平台：约750万次单模型调用最终产生约30万次链上动作。研究发现，风险滑杆每提高一级，杠杆平均增加0.425；某一设置组合只占11%的持仓，却贡献了62%的爆仓。将不同前沿模型放进相同操作层做配对回放，短期结果没有显著差别。样本集中在Base迷因币和Hyperliquid永续合约，平台与作者也有关联，不能据此推断所有市场。它真正提醒的是：购买或开发“AI交易员”时，先审查默认杠杆、仓位上限、止损、确认步骤和完整日志，再讨论提示词与模型排名；这项研究中的代理群体并未整体盈利。"
+      ],
+      "tags": ["能力前沿", "交易代理", "风险治理"]
+    },
+    {
+      "section": "quick",
+      "title": "企业问数时，Alteryx想让代理调用同一份业务逻辑",
+      "teaser": "它把指标计算做成可检查、可复用的工作流，避免不同聊天工具各自猜一遍定义。",
+      "source": {
+        "name": "Alteryx",
+        "url": "https://www.alteryx.com/blog/build-trusted-ai-with-roi-in-the-alteryx-2026-summer-release",
+        "type": "official",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "Alteryx夏季版把指标和业务规则放进可查看、编辑、复跑和审计的工作流，再让Claude、ChatGPT等代理调用同一逻辑。这样“净收入”之类的定义不必由每个模型重新猜测。厂商给出的准确率和节时案例尚非独立验证；团队可先挑一项争议多的核心指标，对照财务结果和权限日志，小范围检验后再开放给更多代理。"
+      ],
+      "tags": ["能力前沿", "数据分析", "业务逻辑"]
+    }
+  ]
+}
