@@ -1,0 +1,127 @@
+{
+  "date": "2026-09-11",
+  "edition": "morning",
+  "subject": "2026年9月11日｜AI正从聊天框走进工作的下一步",
+  "title": "2026年9月11日｜AI开始在真实流程里接手下一步",
+  "daily_quote": {
+    "text": "记录若要对科学有用，就必须不断扩展、妥善保存，而最重要的是，必须被查阅。",
+    "author": "万尼瓦尔·布什",
+    "source_name": "《诚如所思》（The Atlantic，1945）",
+    "source_url": "https://www.theatlantic.com/magazine/archive/1945/07/as-we-may-think/303881/"
+  },
+  "standfirst": "今天的新产品有一条很具体的共同线索：AI不再满足于生成一段话，而是开始读取企业指标、跨应用建文档、给学生即时反馈，并在安全运营里整理线索。真正决定效果的，是它能接触哪些上下文、被允许执行哪一步，以及人在哪个节点确认。能力前沿也在变化——更专业的数据和更清楚的控制层，正在成为比通用聊天更重要的底座。",
+  "editor_note": "今天可以挑一个高频工作，把“找资料—形成判断—执行动作”分成三段：先让AI接手最慢、最可核对的一段，并给它明确的数据源和验收标准。不要一上来追求全自动；当错误能被快速发现、责任边界也写清楚后，再逐步向下一段开放权限。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "ChatGPT开始直接分析企业数据，问题不再只是会不会写提示词",
+      "teaser": "Data插件能调查指标变化并生成交互报告，团队自己的口径与权限决定答案能否用于决策。",
+      "source": {
+        "name": "OpenAI ChatGPT Release Notes",
+        "url": "https://help.openai.com/en/articles/6825453-chatgpt-release-notes",
+        "type": "official",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "OpenAI在ChatGPT Work和Codex中上线Data插件。用户可以针对已连接的业务数据提问，追查某项指标为什么变化，并把结果做成可继续追问的交互式看板或报告；团队还可以补充自己的指标定义和业务背景。入口是插件目录中的Data，安装后用“@Data”开始。连接具体数据源可能仍需管理员配置或个人授权，查询沿用当前账号已有的访问权限。",
+        "这比把表格上传给聊天机器人更接近真实分析流程，但也把质量问题从提示词推回数据治理：如果“活跃用户”“净收入”等口径无人维护，AI只会更快地产出一份看起来完整的歧义。适合先选一个已有标准报表的指标，让插件复现结论并解释异常，再核对查询范围、计算方式和引用数据。涉及预算、绩效或财务披露时，交互看板仍应由数据负责人复核，不能把可视化完成等同于审计完成。"
+      ],
+      "tags": ["应用前沿", "数据分析", "企业工作"]
+    },
+    {
+      "section": "lead",
+      "title": "Gemini跨过应用边界，文档、邮件和日程开始连成一件事",
+      "teaser": "用户可在Gmail、Drive等入口直接创建文件和安排会议，对外动作仍保留预览与确认。",
+      "source": {
+        "name": "Google Workspace Updates",
+        "url": "https://workspaceupdates.googleblog.com/2026/09/create-content-schedule-events-and-coordinate-tasks-across-Workspace-regardless-of-what-app-you-are-in.html",
+        "type": "official",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "Google把Gemini从单个Workspace应用的侧栏推进成跨应用协调者：人在Gmail里可以生成Docs、Sheets或Slides，在Drive里可汇总文件形成带来源的研究报告，在Docs中可起草并发送邮件，也能查找空闲时间、安排会议和创建Tasks。文件会保存到Drive；发送邮件或做出日历承诺前，系统会展示可编辑的预览卡，由用户确认后才执行。",
+        "功能从9月2日起分批上线，最长可能需要15天；首发只支持英语，并受高级AI用量限制。Business Standard/Plus、Enterprise Standard/Plus及部分教育和个人AI套餐可用，但个人Google AI Pro不包含排期能力，Frontline Plus则只开放排期。最适合的试法不是让它“一口气完成项目”，而是把会议纪要变成任务和跟进邮件，再逐项核对负责人、日期、收件人和共享权限。Google称工作区数据不会被人工审阅或用于训练Gemini，现有文档权限仍然生效。"
+      ],
+      "tags": ["应用前沿", "办公协作", "任务执行"]
+    },
+    {
+      "section": "lead",
+      "title": "月球基础模型开源，真正稀缺的是被对齐的科学数据",
+      "teaser": "IBM与NASA同时开放模型和多任务数据集，让研究者不必为每个问题重新整理观测资料。",
+      "source": {
+        "name": "IBM Newsroom",
+        "url": "https://newsroom.ibm.com/2026-09-10-ibm-and-nasa-release-open-source-ai-model-to-support-lunar-exploration",
+        "type": "official",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "IBM与NASA发布开源的月球基础模型，并配套整理了一套可直接用于机器学习的数据：30多个空间对齐的数据层，来自9台仪器和4次任务，包含NASA月球勘测轨道器、GRAIL以及日本SELENE/Kaguya任务的数万张图像和地图。研究者可以在同一底座上适配月球冰候选区、陨石坑和火山地貌等任务，不必先为每个问题重新拼接不同分辨率与坐标体系的资料。",
+        "论文作者报告，模型在月球冰候选区预测中相对SwinV2-B最多降低22%的误差，在约100米尺度的陨石坑任务中用一半训练数据取得近19%的提升；这些结果来自IBM和NASA团队自己的技术论文，不是独立复现，火山地貌实验还使用了不完美标签。它已经是研究者可下载和改造的工具，却不是“发现了月球水”的成品系统。更广的启示是：专业AI的优势往往来自可追溯、已对齐的数据资产，而不只是换一个更大的通用模型。"
+      ],
+      "tags": ["能力前沿", "科学AI", "开源模型"]
+    },
+    {
+      "section": "use",
+      "title": "一间法医课把AI放在交作业之前，而不是评分之后",
+      "teaser": "教师用课程资料限定聊天机器人的回答，让15名学生在写作过程中得到反馈，最终评分仍由教师负责。",
+      "source": {
+        "name": "MagicSchool",
+        "url": "https://www.magicschool.ai/blog-posts/chatbot-for-student-feedback",
+        "type": "primary",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "美国犹他州一名十一年级法医科学教师与犹他州立大学团队合作，用MagicSchool做了一个只检索获准课程材料的聊天机器人。15名学生在写讨论帖时使用它：机器人会提醒问题是否答全、追问推理深度并复述学生的思路，但被限制不能代写最终答案。教师继续负责教学、评估与评分。案例记录称，学生的初稿更完整，过去要等数天的反馈也提前到了思路仍在形成的时候。",
+        "这是单一班级的小样本实践，不能据此认定成绩会普遍提高；团队也记录了机器人简化学生回答、对部分学生显得多余的情况。它可复制的部分不是某个品牌，而是设计顺序：先确定学习目标和评分标准，再限定资料范围、禁止代写，并让学生知道AI为何出现。教师若想试，可从一项允许修改的低风险作业开始，保留原始对话，比较初稿和终稿的变化，再决定是否扩大。"
+      ],
+      "tags": ["应用前沿", "教育实践", "即时反馈"]
+    },
+    {
+      "section": "use",
+      "title": "安全团队先让AI整理线索，聊天和自动分诊仍在路上",
+      "teaser": "Ontic把摘要与趋势识别放进安全运营平台，未来功能和今天可用的能力需要分开看。",
+      "source": {
+        "name": "Ontic Technologies",
+        "url": "https://www.prnewswire.com/news-releases/ontic-introduces-ontic-ai-to-reduce-manual-work-across-security-operations-302873848.html",
+        "type": "official",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "Ontic在企业与政府安全运营平台中加入AI：今天已经可用的是摘要和Trends，前者整理情报源、事件与调查记录，后者把相关信号归组，帮助分析员识别正在形成的事件。用自然语言查询数据的Chat、去重以及给出历史背景和下一步建议的Copilot，官方计划到2026年底前才上线，不能把路线图当成现成功能。",
+        "厂商称客户数据不会用于替其他组织训练或验证模型，现有权限与隐私控制继续适用，最终决策也由分析员作出；但公告没有给出独立效果评测和价格。安全团队若试用，应先用已经结案的事件做回放，检查摘要漏项、错误关联和告警合并，再限定哪些字段可进入模型。面对人身安全或调查判断，“减少重复阅读”可以自动化，处置结论仍需要可追溯的人来负责。"
+      ],
+      "tags": ["应用前沿", "安全运营", "人机协作"]
+    },
+    {
+      "section": "think",
+      "title": "AI让产出变快后，验收标准必须在生成之前出现",
+      "teaser": "一篇新的工作反思援引知识工作研究：越信任AI的人，越可能减少对输出的审查。",
+      "source": {
+        "name": "Inside Atlassian",
+        "url": "https://www.atlassian.com/blog/ai-at-work/ai-faster-not-better",
+        "type": "author",
+        "published_at": "2026-09-09"
+      },
+      "body": [
+        "Atlassian一篇新文章把“AI产量”与“工作质量”拆开讨论：生成得更快，并不代表接收者更容易理解和使用。文章援引微软研究院发表于CHI 2025的调查——319名知识工作者提供了936个真实使用案例；对AI越有信心，受访者自报的批判性思考越少，而对自己完成任务越有信心，审查投入越多。研究是自我报告的相关性证据，不能证明AI直接削弱思考。",
+        "对团队更实用的结论是把验收条件提前：邮件要有明确请求和截止时间，研究摘要要能回到原始证据，交接文档要让下一位同事完成任务。要求每个人“更仔细”很难长期维持；在模板、评审和发布权限中写进这些标准，才不会让省下的写作时间变成所有接收者的核对成本。"
+      ],
+      "tags": ["能力前沿", "工作质量", "批判性思考"]
+    },
+    {
+      "section": "quick",
+      "title": "Salesforce为企业代理画出统一控制层，但大部分新能力还没交付",
+      "teaser": "新架构把上下文、动作、治理、安全和模型管理放在一起，统一体验要到下一财年才开始推出。",
+      "source": {
+        "name": "Salesforce",
+        "url": "https://www.salesforce.com/news/stories/enterprise-ai-harness/",
+        "type": "official",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "Salesforce公布Enterprise AI Harness，计划把Data 360、Informatica、MuleSoft、Agentforce等现有技术组织成共享的上下文、推理、动作、治理、安全和模型层，并用AI Control Plane统一查看权限、成本与运行表现。底层已有不少组件可用，但新能力和统一界面要到2028财年初才开始推出，价格、地区和升级路径尚未公布。现在应把它当成架构方向，而不是可立即采购的一款完整产品。"
+      ],
+      "tags": ["能力前沿", "企业架构", "代理治理"]
+    }
+  ]
+}
