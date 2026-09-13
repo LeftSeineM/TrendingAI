@@ -1,0 +1,143 @@
+{
+  "date": "2026-09-13",
+  "edition": "morning",
+  "subject": "2026年9月13日｜AI开始进入桌面、审查、付款与工程现场",
+  "title": "2026年9月13日｜AI应用正在离开聊天框，进入真正的工作链",
+  "daily_quote": {
+    "text": "分析机无意创造任何东西；它只能做我们知道如何命令它去做的事。",
+    "author": "阿达·洛芙莱斯",
+    "source_name": "《分析机概论》译者附注（1843）",
+    "source_url": "https://www.fourmilab.ch/babbage/sketch.html"
+  },
+  "standfirst": "今天的主线很清楚：AI产品正从单独的聊天页面，贴进电脑桌面、代码审查、电话网络、付款流程和工程现场。真正拉开差距的，不只是模型能回答多难的问题，而是谁能把权限、数据、验证和责任人一起放进工作链。与此同时，医学和安全研究也提醒我们，能力变强与结果可信仍是两件事。",
+  "editor_note": "今天不妨挑一个每天都要切换应用的任务，记录信息从哪里来、最后要写进哪里、哪一步必须由人确认。桌面助手和代理平台已经在减少复制粘贴，但凡涉及付款、上线、医疗或外部沟通，都应先设置权限边界和可回滚点，再谈自动化比例。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "Gemini来到Windows桌面，AI入口开始抢占快捷键",
+      "teaser": "Windows 10和11用户现在可用Alt+Space随时唤出Gemini；真正的变化是少一次切屏，也多了一层账号与资料权限。",
+      "source": {
+        "name": "Google Workspace Updates",
+        "url": "https://workspaceupdates.googleblog.com/2026/09/the-gemini-desktop-app-is-now-available-for-Windows.html",
+        "type": "official",
+        "published_at": "2026-09-11"
+      },
+      "body": [
+        "Google已向Windows 10和11推出Gemini桌面应用，个人Google账号、Workspace客户和Workspace Individual订阅者都能下载。按Alt+Space可把一个浮动窗口覆盖到当前工作上，用来核对文档事实、想演示标题，或从Gmail和Drive整理项目摘要；图像生成也在同一个入口里。它已经全球上线，但多步骤代理Gemini Spark等能力仍要求Google AI订阅、年满18岁，实际地区可用性也不同。",
+        "它解决的不是“模型突然更聪明”，而是把一次次打开浏览器、找标签页和复制上下文缩成一个动作。个人用户可以先用它处理不含隐私的改写和资料归纳；团队管理员要留意该应用在启用Gemini的组织里默认开启，可在管理后台的生成式AI设置中关闭。Alt+Space同时是Windows系统菜单、PowerToys Run和部分Copilot功能的快捷键，安装后若发现原有习惯被打断，应先重新映射按键，再决定让哪个助手常驻。"
+      ],
+      "tags": ["应用前沿", "桌面助手", "工作流"]
+    },
+    {
+      "section": "lead",
+      "title": "代码审查开始自己跑测试，也会自动收起已经修好的意见",
+      "teaser": "GitHub Copilot让多代理参与轻量审查，并用终端工具验证代码；省下的是整理反馈的时间，不是最后签字。",
+      "source": {
+        "name": "GitHub Changelog",
+        "url": "https://github.blog/changelog/2026-09-11-auto-resolution-and-analysis-updates-in-copilot-code-review/",
+        "type": "official",
+        "published_at": "2026-09-11"
+      },
+      "body": [
+        "GitHub更新了Copilot code review：开发者提交修复后，系统会在复审时自动关闭已经解决的评论，未处理的问题继续保留；采用它给出的修复建议时，还会按改动生成提交说明。更关键的是，审查代理现在可以在防火墙后的环境里调用构建、测试和定向脚本，而Lite档位改成由多个代理分别检查，再合并结果。也就是说，AI审查正在从读代码给意见，向用工具验证意见迈一步。",
+        "GitHub称内部实验里，被开发者实际处理的高严重度意见平均增加47%，中等问题增加31%，审查成本约下降8%；这些是厂商实验，不等于每个仓库都会复现。团队可先在一类有稳定测试的仓库启用两周，把AI发现分成真实缺陷、风格建议和误报，并检查自动关闭的评论是否真的被修复。即使代理能运行测试，依赖供应链、权限变化和业务规则仍需人审；合并权不应因为评论看起来更整洁就自动下放。"
+      ],
+      "tags": ["应用前沿", "软件开发", "团队实践"]
+    },
+    {
+      "section": "lead",
+      "title": "工业AI的新交付方式，是让懂工程的人一直跟到生产现场",
+      "teaser": "CoreWeave把领域工程师嵌进客户团队，用自有测试与传感器数据做模型；F1案例说明价值来自反复校验，而非一次演示。",
+      "source": {
+        "name": "CoreWeave",
+        "url": "https://coreweave.com/news/coreweave-launches-physical-ai-field-engineering-to-turn-proprietary-data-into-production-ai",
+        "type": "official",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "CoreWeave推出Physical AI Field Engineering：由汽车、航空和机械背景的工程师进入客户现场，从梳理工序和数据开始，和原团队一起做模型、验证物理结果并部署到生产，而不是交一份咨询报告后离场。输入来自客户自己的试验台、仿真、生产传感器和遥测，客户保留数据与模型控制权。官方称这套方法已用于一百多个汽车、航空和机器人项目，但没有公布标准价格或统一购买门槛。",
+        "最具体的例子来自阿斯顿·马丁F1车队：团队用七小时人工标注的赛场音频、经过75次迭代做出转写模型，现可同时处理40路无线电，在不到30秒的进站决策窗口内帮助查询轮胎策略。这个案例真正可借鉴的不是赛车速度，而是交付顺序：先让业务专家定义什么算对，再让模型在自家噪声和异常里反复过关，最后由原团队接手运行和再训练。涉及设备安全时，还要把罕见故障、重复性和人工接管写进验收，而不是只看平均准确率。"
+      ],
+      "tags": ["应用前沿", "工业AI", "交付实践"]
+    },
+    {
+      "section": "use",
+      "title": "AI替人付款之前，支付网络先要认清它是谁",
+      "teaser": "Visa、Mastercard和蚂蚁国际正共建跨网络的Know-Your-Agent框架，目标是让代理身份、授权和责任可以被验证。",
+      "source": {
+        "name": "The Asian Banker",
+        "url": "https://www.theasianbanker.com/press-releases/ant-international-mastercard-and-visa-initiate-collaboration-on-know-your-agent-interoperability-to-scale-agentic-commerce",
+        "type": "primary",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "Visa、Mastercard和蚂蚁国际开始制定可互操作的Know-Your-Agent框架，希望卡组织、钱包、代理平台和商家能识别同一个可信代理，不必每到一个网络就重新核验。计划围绕三件事：把代理活动追溯到运营者、持卡人或机构；采用共同的安全与行为认证要求；持续结合身份和交易信号监测。三方仍保留各自的审批与风险决策，工作通过新加坡金融管理局召集的BuildFin.ai平台推进。",
+        "这仍是合作中的框架，不是消费者今天就能打开的付款功能，也没有公布落地时间表和收费方式。对准备做代购、订票或报销代理的团队，眼下最实用的动作是先保存四类记录：代理是谁、谁授权、允许买什么和每次实际做了什么；金额上限、敏感品类和最终确认也应独立设置。若系统只能证明用户登录过，却不能证明这笔具体消费来自哪次授权，自动付款越顺畅，争议发生后越难说明责任。"
+      ],
+      "tags": ["应用前沿", "代理支付", "身份与授权"]
+    },
+    {
+      "section": "use",
+      "title": "电话里的AI，正在从一个App变成运营商提供的网络能力",
+      "teaser": "Radisys把语音模型、反诈、翻译和呼叫控制打包给电信运营商，未来部分AI服务可能无需用户另装应用。",
+      "source": {
+        "name": "Radisys",
+        "url": "https://hub.radisys.com/press-release/radisys-launches-v-ai-ecosystem-to-accelerate-telecom-ai-service-innovation",
+        "type": "official",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "Radisys发布V.AI生态，把ElevenLabs、Hiya、Speechmatics等语音能力接到自己的运营商平台，覆盖通话前、通话中和通话后。运营商可以直接部署来电筛查、反诈、实时翻译、通话记录和代理助手，也能用可视化设计器、SDK和脚本按地区改造服务；运行位置可在运营商网络、公有云或边缘之间选择。官方称底层平台已在北美、拉美、欧洲和亚太有生产部署，但没有列出哪些运营商已向普通用户开放具体V.AI功能，也未公开价格。",
+        "这条路线的重要之处，是AI不再要求每个人下载同一个App：网络能利用身份、位置和服务质量等运营商信息，部分体验甚至可延伸到功能机和固定电话。不过，网络级处理也意味着通话内容、声纹和位置数据的权限更敏感。若企业评估这类服务，应先问清录音何时开启、数据在哪个地区处理、模型是否会训练、用户怎样退出，以及翻译或反诈误判由谁复核。对个人而言，在本地运营商正式公告之前，只能把它看成已经具备部署条件的基础设施。"
+      ],
+      "tags": ["应用前沿", "语音通信", "电信服务"]
+    },
+    {
+      "section": "use",
+      "title": "DeepSeek用更小的活跃计算量，换取多模态代理的更低成本",
+      "teaser": "V4.1-Flash已经上线API并替代旧Flash路线；开发者得到速度与缓存成本改进，也要尽快检查模型名迁移。",
+      "source": {
+        "name": "DeepSeek",
+        "url": "https://www.deepseek.com/en/news/deepseek-v4-1-flash/",
+        "type": "official",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "DeepSeek V4.1-Flash已在API上线，模型名为deepseek-flash，并原生接收图像。它采用5520亿参数的混合专家架构，但输入阶段只激活80亿参数、输出阶段激活160亿；官方称相较上一代，KV缓存占用降到四分之一的显存和八分之一的SSD空间。旧的V4 Flash与视觉实验版已经退役，兼容模型名会暂时路由到新版；9月14日12时起，V4 Pro请求也将临时转到V4.1-Flash并按新费率计费，直到V4.1 Pro发布。",
+        "这首先是开发者和代理产品的成本变化，不是普通聊天用户必须立刻换模型。正在生产中使用旧模型名的团队，应在路由切换前固定一组含图片、工具调用和长上下文的真实任务，比较答案质量、延迟、token用量和失败恢复，再决定是否改默认模型。厂商公布的性能和存储数字来自自身测试，不能代替业务数据复验；峰谷计价虽保留、低谷为峰值的一半，但批处理能否挪到低谷，还取决于任务时效与数据合规要求。"
+      ],
+      "tags": ["能力前沿", "多模态模型", "开发成本"]
+    },
+    {
+      "section": "think",
+      "title": "AI滥用正在从帮人写代码，走向替人编排整条攻击链",
+      "teaser": "Anthropic的新报告记录了监控、网络攻击与武器相关滥用，也暴露出企业不能只依赖模型拒答。",
+      "source": {
+        "name": "Anthropic Threat Intelligence",
+        "url": "https://www.anthropic.com/threat-intelligence-report-september-2026",
+        "type": "primary",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "Anthropic汇总过去八个月调查并封禁的真实滥用案例：有行为者让Claude Code参与舆情监控与监控数据库查询，也有人把模型当作软件开发主力来搭建通信拦截系统；另一些案例涉及武器软件、采购和目标情报。报告称模型在模拟战术情报与常规武器任务上的能力持续提高，并据此新增高爆炸药和武器开发流量分类器。这些材料来自服务商自身日志和调查，样本经过选择，不能直接推算所有模型或全部用户中的发生率。",
+        "对正在把代理接入真实系统的团队，结论比“模型会不会拒绝”更具体：权限要按任务最小化，外部写操作应单独确认，异常调用要能实时报警，所有工具动作必须留下可追溯记录，还要有一键停用凭证的办法。高风险流程尤其不能把同一个代理同时放在信息搜集、代码执行和最终审批三个位置。模型的安全训练是一层防线，但当账号被有意滥用或提示被绕过时，系统侧的身份、网络与审计控制才是最后的边界。"
+      ],
+      "tags": ["能力前沿", "AI安全", "权限治理"]
+    },
+    {
+      "section": "quick",
+      "title": "连续多年的3D乳腺影像，比单张片子更能提示五年风险",
+      "teaser": "纽约大学的模型利用多次筛查里的变化预测乳腺癌风险，但目前仍是单中心回顾性研究，不能用于个人诊断。",
+      "source": {
+        "name": "NYU Langone Health",
+        "url": "https://nyulangone.org/news/ai-assisted-imaging-tool-breast-cancer-could-tailor-screening-women-according-individual-risk",
+        "type": "research",
+        "published_at": "2026-09-10"
+      },
+      "body": [
+        "NYU-DRP用161,165名女性的313,531次年度3D乳腺摄影训练，按五年后风险排序的表现为72%，高于只看最新一张3D影像的70%和2D模型的68%。它提示纵向变化可能补充乳腺密度与家族史，但研究来自单一医疗系统、只使用一家厂商设备，尚未跨医院验证，也没有证明按预测调整筛查能改善结局；现阶段应视为研究结果，不应据此增减个人检查。"
+      ],
+      "tags": ["能力前沿", "医学影像", "研究边界"]
+    }
+  ]
+}
