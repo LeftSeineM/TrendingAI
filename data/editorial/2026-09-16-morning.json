@@ -1,0 +1,142 @@
+{
+  "date": "2026-09-16",
+  "edition": "morning",
+  "subject": "2026年9月16日｜AI开始自己造应用，真正稀缺的是责任和上下文",
+  "title": "2026年9月16日｜从一句需求到一个应用之后，谁来拥有、约束和维护它",
+  "daily_quote": {
+    "text": "你无法向前串起这些点，只能在回望时把它们连起来。",
+    "author": "史蒂夫·乔布斯",
+    "source_name": "斯坦福大学2005年毕业演讲文字稿",
+    "source_url": "https://news.stanford.edu/stories/2005/06/youve-got-find-love-jobs-says"
+  },
+  "standfirst": "今天的前沿不只在模型里，也在模型外面。AI已经能按一句描述生成完整应用、参与银行接口接入、分析可疑邮件并制作心脏模型；但真正决定这些能力能否长期使用的，是谁拥有它、它看见哪些上下文、花多少钱、在哪个隔离环境运行，以及出错后由谁接手。",
+  "editor_note": "如果团队正在引入代理，可以把今天的内容当作一张检查表：生成出来的应用有没有明确所有者和退役机制，专业知识是否随代码一起维护，便宜规则能否先过滤大多数请求，文件和凭据是否与代理本身隔离。模型能力在普及，可靠的运行环境和责任设计反而会成为差异。",
+  "stories": [
+    {
+      "section": "lead",
+      "title": "一句话生成完整应用后，企业先要解决的是“谁负责”",
+      "teaser": "Copilot Studio开始生成带前后端和部署流程的应用，微软同时把所有者、连接器、用量与退役控制交给管理员。",
+      "source": {
+        "name": "Microsoft Copilot Studio Blog",
+        "url": "https://techcommunity.microsoft.com/blog/copilot-studio-blog/managing-apps-built-in-copilot-studio/4556774",
+        "type": "official",
+        "published_at": "2026-09-15"
+      },
+      "body": [
+        "微软正在让用户只描述想要的结果，就能在Copilot Studio里生成一套包含界面、逻辑、数据连接、源码管理和分阶段部署的应用。它让过去需要排进开发队列的小工具更容易被业务人员做出来，但也会让企业里的应用数量突然膨胀。新应用默认建立在个人开发环境中，运行时使用当前登录者的权限，已有的数据和连接器策略仍然生效；这意味着“能生成”并不等于“可以不经审查地发布”。",
+        "更值得注意的是配套的管理面：管理员可以在Microsoft 365管理中心查看应用所有者、生命周期、连接器、策略和使用情况，也能限制分享、禁用连接器或退役应用。创建与运行还分别消耗Copilot Credits，并可设置个人或群组上限。团队若要开放这项能力，第一步不该是全民培训提示词，而是规定每个应用的负责人、预算、数据边界和停用日期。微软的功能说明属于正式产品管理路径，但具体许可、额度与租户可用性仍需按企业订阅核对。"
+      ],
+      "tags": ["应用前沿", "低代码", "治理"]
+    },
+    {
+      "section": "lead",
+      "title": "银行接口接入从邮件和表格，变成多方共用的代理工作台",
+      "teaser": "Ninth Wave把API映射、验证和问题分派放进共享门户，真正可复制的是租户隔离与按任务选模型。",
+      "source": {
+        "name": "AWS Machine Learning Blog",
+        "url": "https://aws.amazon.com/blogs/machine-learning/how-ninth-wave-built-ai-powered-open-finance-onboarding-on-amazon-bedrock/",
+        "type": "official",
+        "published_at": "2026-09-14"
+      },
+      "body": [
+        "开放金融平台Ninth Wave把原本分散在邮件、电子表格和多支团队之间的银行API接入流程，做成了名为Compass的共享门户。不同代理分别处理接口理解、字段映射、验证与问题分派，银行工程师、聚合服务商和平台接入团队看到的是同一份进度和证据，而不是各自保存一版表格。每个客户的数据按租户隔离，系统根据任务选择模型并限制权限，而不是让一个通用代理读取所有材料。",
+        "AWS与Ninth Wave称映射和分析时间最多减少百分之九十五，这属于厂商披露，尚不能当作普遍结果。更可靠的启发是：复杂接入的价值不在自动写出一份映射表，而在让问题、依据和责任人留在同一条流程里。做类似项目时，应先选一种稳定接口做对照试验，记录人工修正率与漏项，再扩大到高风险账户；SOC 2、PCI和加密配置也不能由“使用了大模型平台”自动替代。"
+      ],
+      "tags": ["应用前沿", "金融科技", "多代理"]
+    },
+    {
+      "section": "lead",
+      "title": "儿童心脏模型从数小时缩到数秒，但临床决定仍由医生承担",
+      "teaser": "费城儿童医院把CT、MRI和三维超声转成解剖模型，用于手术规划；实时物理模拟仍在建设中。",
+      "source": {
+        "name": "NVIDIA Blog",
+        "url": "https://blogs.nvidia.com/blog/childrens-hospital-open-source-ai-cardiac-care",
+        "type": "official",
+        "published_at": "2026-09-15"
+      },
+      "body": [
+        "费城儿童医院基于MONAI和SlicerHeart建立了心脏建模流程，把CT、MRI或三维超声中的结构分割成可供团队查看和打印的解剖模型。院方称过去需要专家约四小时的制作过程现在可在数秒内完成，预计每年用于约两百个病例；这类模型的意义不是替医生给出手术答案，而是让外科、影像和家属更早看到同一份空间结构，比较不同路径。",
+        "这是已经进入临床规划的工具，但报道中的时间和采用数据来自医院与技术供应商，不等于已证明改善所有患者结局。模型对罕见畸形、图像质量和不同设备仍需逐例复核。基于Newton与Warp的近实时物理模拟还处在实施阶段，不能与现有分割能力混为一谈。医院若考虑复制，应先把模型输出与既有人工建模逐例盲比，并明确最终解释与手术决定仍由临床团队负责。"
+      ],
+      "tags": ["应用前沿", "医疗AI", "三维建模"]
+    },
+    {
+      "section": "use",
+      "title": "邮件安全的实用答案不是“每封邮件都上代理”",
+      "teaser": "Abnormal AI把廉价规则、小模型和深度代理分层，只把最难的少数样本送进无外网沙箱。",
+      "source": {
+        "name": "AWS Machine Learning Blog",
+        "url": "https://aws.amazon.com/blogs/machine-learning/abnormal-ai-amazon-bedrock-agentcore-for-agentic-email-security-at-scale/",
+        "type": "official",
+        "published_at": "2026-09-14"
+      },
+      "body": [
+        "Abnormal AI披露的邮件防护架构很适合纠正一种误区：代理不是越多越好。系统先用启发式规则和小模型处理每天数十亿级的明显样本，再让中等模型分析数百万个可疑案例，只有最困难的数万个才进入会写代码、调用工具的代理。代理运行在临时MicroVM里，默认不能访问外网，任务结束即销毁；结果还要经过可重复的程序校验。另一个分析代理每周批量研究误判并起草新规则，但规则上线前仍由监控流程验证。",
+        "厂商称其服务覆盖超过四分之一的财富500强，这不是独立审计，也不能代表所有邮件环境。真正值得借鉴的是成本与风险同时分层：先为常见情况建立便宜、确定的通道，只给少数高价值难题更强能力；让代理生成候选规则，而不是直接改生产策略；把网络出口、文件和凭据放在模型控制之外。任何要批量处理客户数据的团队都可以先画出这三层，再决定哪里真的需要代理。"
+      ],
+      "tags": ["应用前沿", "网络安全", "分层架构"]
+    },
+    {
+      "section": "use",
+      "title": "让编程代理懂数据库，关键是把部署约束写进仓库",
+      "teaser": "微软推出Postgres Skills，提醒团队别只让代理写“看起来正确”的SQL，还要告诉它版本、扩展和权限边界。",
+      "source": {
+        "name": "Microsoft Azure Database for PostgreSQL Blog",
+        "url": "https://techcommunity.microsoft.com/blog/adforpostgresql/postgres-skills-give-your-ai-agent-postgresql-expertise/4556705",
+        "type": "official",
+        "published_at": "2026-09-15"
+      },
+      "body": [
+        "通用编程代理往往能写出语法像样的SQL，却不知道你的PostgreSQL版本、已启用扩展、角色权限、托管平台限制和迁移规范。微软发布Postgres Skills的实际意义，是把这类产品与版本知识作为代理可读取的仓库说明，而不是每次靠开发者在对话里重新解释。无论是否采用官方技能，团队都可以把实际版本、允许的扩展、命名规则、禁止的高风险操作和回滚步骤写进项目，并随数据库升级一起评审。",
+        "这仍然不是自动批准迁移的理由。代理生成的查询要在与生产结构相同的测试库里跑执行计划、权限测试和回滚演练，涉及锁表、删除或跨租户访问时必须人工确认。技能文档能减少上下文缺失，却不能知道实时数据分布，也不能代替备份与变更窗口。"
+      ],
+      "tags": ["应用前沿", "开发工具", "PostgreSQL"]
+    },
+    {
+      "section": "think",
+      "title": "强化学习微调进入控制台后，最难的问题变成“奖励什么”",
+      "teaser": "Google把Gemini的奖励函数、训练监控和检查点测试带进Agent Studio预览，但更易操作不等于更易评估。",
+      "source": {
+        "name": "Google Cloud Gemini Enterprise Agent Platform Release Notes",
+        "url": "https://docs.cloud.google.com/gemini-enterprise-agent-platform/release-notes",
+        "type": "official",
+        "published_at": "2026-09-15"
+      },
+      "body": [
+        "Google Cloud在预览版控制台中加入Gemini强化学习微调：团队可以配置Python或模型评分器，先用样本测试奖励逻辑，再观察训练与评估曲线，并在Agent Studio里试不同检查点。它把过去偏研究工程的流程做得更容易操作，适合需要固定格式、工具选择或行业判断的代理；但如果奖励函数只鼓励“看起来完成”，模型也会更擅长钻评分规则的空子。",
+        "当前能力仍是预览，并受模型与区域限制。真正上线前，应保留训练时从未见过的失败集，分别检查正确性、拒答、成本和副作用，同时保存基础模型与旧检查点以便回滚。强化学习能把已定义清楚的偏好放大，却不能替团队决定什么结果才算好。"
+      ],
+      "tags": ["能力前沿", "强化学习", "评测"]
+    },
+    {
+      "section": "quick",
+      "title": "代理需要的运行时，正在从容器变成可暂停的隔离工作区",
+      "teaser": "Google开源Agent Substrate，用微虚拟机、外置凭据和快速恢复承载长时间代理；生产能力仍需申请。",
+      "source": {
+        "name": "Google Cloud Blog",
+        "url": "https://cloud.google.com/blog/products/containers-kubernetes/agent-substrate-available-on-gke",
+        "type": "official",
+        "published_at": "2026-09-15"
+      },
+      "body": [
+        "Agent Substrate是面向代理任务的开源Kubernetes运行层：把代码放进microVM或gVisor隔离环境，网络出口和凭据由代理之外的控制面管理，并允许休眠后快速恢复。Google公布的亚秒恢复、每秒五百次激活和十倍密度是厂商基准，不应直接套到其他负载。它已向GKE客户开放非生产使用，生产通用可用仍需申请；团队可先拿一个长时间、会执行陌生代码的任务测试隔离、恢复和账单，再决定是否迁移。"
+      ],
+      "tags": ["能力前沿", "代理基础设施", "隔离"]
+    },
+    {
+      "section": "quick",
+      "title": "代理暂停以后，工作文件也需要一个不会消失的地方",
+      "teaser": "Filestore Agent Volumes把持久文件空间按需挂给代理，也允许多个代理在同一目录协作。",
+      "source": {
+        "name": "Google Cloud Blog",
+        "url": "https://cloud.google.com/blog/products/storage-data-transfer/filestore-agent-volumes",
+        "type": "official",
+        "published_at": "2026-09-15"
+      },
+      "body": [
+        "Filestore Agent Volumes为每个代理分配隔离、持久的POSIX文件空间，并能在毫秒级挂载；多代理也可以通过读写共享和文件锁协作。对会暂停、换运行实例或处理大型资料的代理，这比把所有状态塞进提示词更自然，也能按实际存储量计费并做生命周期分层。当前同样主要面向非生产使用，生产通用可用需申请。采用前仍要定义文件保留期、敏感数据加密、跨代理权限和删除责任。"
+      ],
+      "tags": ["能力前沿", "代理存储", "多代理"]
+    }
+  ]
+}
