@@ -80,6 +80,10 @@ def validate_issue(issue, expected_date=None, expected_edition=None):
     errors = []
     if not isinstance(issue, dict):
         return ["稿件根节点必须是 JSON 对象"]
+    if issue.get("format_version", 1) not in (1, 2):
+        errors.append("format_version 只能是 1 或 2")
+    if issue.get("format_version") == 2:
+        errors.extend(validate_research_format(issue))
     if expected_date and issue.get("date") != expected_date:
         errors.append(f"date 必须为 {expected_date}")
     if expected_edition and issue.get("edition") != expected_edition:
@@ -213,6 +217,76 @@ def story_anchor(story):
     return "story-" + hashlib.sha1(canonical_url(story["source"]["url"]).encode()).hexdigest()[:12]
 
 
+def validate_research_format(issue):
+    errors = []
+    watch = issue.get("codex_quota_watch")
+    if not isinstance(watch, dict):
+        errors.append("codex_quota_watch 必须是对象")
+        watch = {}
+    if watch.get("confidence") not in ("高", "中", "低", "未核实"):
+        errors.append("额度消息置信度只能为高、中、低或未核实")
+    if not 8 <= len(str(watch.get("summary", ""))) <= 180:
+        errors.append("额度消息摘要需为 8～180 个字符")
+    try:
+        checked = datetime.fromisoformat(str(watch.get("checked_at", "")).replace("Z", "+00:00"))
+        if checked.tzinfo is None or checked.astimezone(BEIJING).date().isoformat() != issue.get("date"):
+            raise ValueError
+    except ValueError:
+        errors.append("额度消息核验时间必须含时区且为稿件当天")
+    if not 6 <= chinese_count(issue.get("research_title", "")) <= 38:
+        errors.append("research_title 需为 6～38 个汉字")
+    for label, sources in (("额度消息", watch.get("sources")), ("研究前言", issue.get("research_sources"))):
+        if not isinstance(sources, list) or not 1 <= len(sources) <= 3:
+            errors.append(f"{label}需有 1～3 个核验来源")
+            continue
+        for source in sources:
+            if not isinstance(source, dict):
+                errors.append(f"{label}来源必须为对象")
+                continue
+            try:
+                url = urllib.parse.urlsplit(str(source.get("url", "")))
+                if url.scheme != "https" or not url.netloc or not str(source.get("name", "")).strip():
+                    raise ValueError
+            except ValueError:
+                errors.append(f"{label}来源需有名称和 https 链接")
+    stories = issue.get("stories", [])
+    if isinstance(stories, list) and stories:
+        apps = sum(isinstance(s, dict) and s.get("track") == "application" for s in stories)
+        if apps < 4 or not .55 <= apps / len(stories) <= .65:
+            errors.append("应用条目至少 4 条且占正文 55%～65%")
+        if any(not isinstance(s, dict) or s.get("track") not in ("application", "capability") for s in stories):
+            errors.append("每条需标记 track 为 application 或 capability")
+        papers = [s for s in stories if isinstance(s, dict) and s.get("paper_topic") in ("ai", "embodied")]
+        if not 1 <= len(papers) <= 2:
+            errors.append("每期需有 1～2 条 AI/具身论文解读")
+        for story in papers:
+            if story.get("track") != "capability" or not isinstance(story.get("source"), dict) or story["source"].get("type") != "research":
+                errors.append("论文解读须归入 capability 并使用 research 原文")
+    return errors
+
+
+def research_header(issue):
+    if issue.get("format_version") != 2:
+        return "", "", ""
+    def links(sources):
+        return " · ".join(f'<a href="{html.escape(s["url"], quote=True)}">{html.escape(s["name"])}</a>' for s in sources)
+    watch = issue["codex_quota_watch"]
+    quota = f'<p class="quota-watch" style="font-size:13px;color:#57534e">Codex 额度刷新消息置信度：{html.escape(watch["confidence"])}｜{html.escape(watch["summary"])} <small>核验：{html.escape(watch["checked_at"])} · {links(watch["sources"])}</small></p>'
+    heading = f'<h2 style="font-size:21px">研究前言｜{html.escape(issue["research_title"])}</h2>'
+    sources = f'<p style="font-size:12px;color:#57534e">前言原始来源：{links(issue["research_sources"])}</p>'
+    return quota, heading, sources
+
+
+def contents_guide(issue, page_url=""):
+    groups = []
+    for section in SECTIONS:
+        stories = [s for s in issue["stories"] if s["section"] == section]
+        entries = "".join(f'<li><a href="{html.escape(page_url, quote=True)}#{story_anchor(s)}">{html.escape(s["title"])}</a><div style="font-size:13px;color:#57534e">{html.escape(s["teaser"])}</div></li>' for s in stories)
+        if entries:
+            groups.append(f'<div><b>{html.escape(SECTION_LABELS[section])}</b><ul>{entries}</ul></div>')
+    return '<div class="full-toc" style="display:block;padding:18px 0"><h2 style="font-size:20px">本期目录</h2>' + "".join(groups) + "</div>"
+
+
 def render_story_email(story, number=None):
     prefix = f"{number:02d} · " if number else ""
     paragraphs = "".join(f'<p style="margin:10px 0;color:#292524;font-size:16px;line-height:1.82">{html.escape(p)}</p>' for p in story["body"])
@@ -225,7 +299,8 @@ def render_story_email(story, number=None):
 
 def render_email(issue, page_url):
     grouped = {section: [story for story in issue["stories"] if story["section"] == section] for section in SECTIONS}
-    guide = "".join(f'<div style="padding:9px 0;border-bottom:1px solid #e7e5e4"><b>{index}. {html.escape(story["title"])}</b><div style="color:#57534e;margin-top:3px">{html.escape(story["teaser"])}</div></div>' for index, story in enumerate(grouped["lead"], 1))
+    guide = contents_guide(issue, page_url)
+    quota, research_heading, research_sources = research_header(issue)
     parts = []
     for section in SECTIONS:
         if not grouped[section]:
@@ -242,8 +317,10 @@ def render_email(issue, page_url):
 <div style="font-size:12px;color:#a16207;font-weight:800;letter-spacing:.14em">TRENDING AI · EDITED BY CODEX</div>
 <h1 style="font:700 31px/1.24 Georgia,'Microsoft YaHei',serif;letter-spacing:-.02em;margin:9px 0">{html.escape(issue["title"])}</h1>
 {quote_block}
+{quota}{research_heading}
 <p style="color:#57534e;font-size:16px;line-height:1.75;margin:0 0 22px">{html.escape(issue["standfirst"])}</p>
-<div style="padding:18px 20px;background:#fafaf9;border-left:4px solid #f59e0b"><b style="font-size:13px;color:#a16207">今天怎么读</b>{guide}</div>
+{research_sources}
+<div style="padding:18px 20px;background:#fafaf9;border-left:4px solid #f59e0b">{guide}</div>
 <p style="margin:18px 0"><a href="{html.escape(page_url, quote=True)}" style="display:inline-block;padding:10px 15px;background:#1c1917;color:#fff;border-radius:8px;text-decoration:none;font-weight:700">打开网页版与全部来源 ↗</a></p>
 {''.join(parts)}
 <aside style="margin-top:34px;padding:18px;background:#f5f3ff;border-radius:9px;color:#4c1d95;line-height:1.75"><b>主编手记</b><br>{html.escape(issue["editor_note"])}</aside>
@@ -259,7 +336,8 @@ def render_page(issue, edition_label, output_dir=DOCS_DIR, base_url=None):
     base_url = (base_url or os.environ.get("PAGES_BASE_URL") or "https://leftseinem.github.io/TrendingAI/daily").rstrip("/")
     report_url = f"{base_url}/{report_name}"
     grouped = {section: [story for story in issue["stories"] if story["section"] == section] for section in SECTIONS}
-    guide = "".join(f'<a href="#{story_anchor(story)}"><span>0{index}</span><b>{html.escape(story["title"])}</b><small>{html.escape(story["teaser"])}</small></a>' for index, story in enumerate(grouped["lead"], 1))
+    guide = contents_guide(issue)
+    quota, research_heading, research_sources = research_header(issue)
 
     def page_story(story, number=None):
         prefix = f'<span class="number">0{number}</span>' if number else ""
@@ -283,6 +361,9 @@ def render_page(issue, edition_label, output_dir=DOCS_DIR, base_url=None):
     page = f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(issue["subject"])}</title><style>
 :root{{--paper:#fbfaf7;--ink:#1c1917;--soft:#57534e;--muted:#78716c;--line:#ddd8cf;--accent:#a16207;--blue:#1d4ed8}}*{{box-sizing:border-box}}html{{scroll-behavior:smooth}}body{{margin:0;background:var(--paper);color:var(--ink);font:16px/1.82 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}}main{{width:min(100% - 36px,1040px);margin:auto;padding:38px 0 70px}}header{{padding:22px 0 32px;border-bottom:1px solid var(--line)}}.brand,.label{{font-size:12px;font-weight:850;letter-spacing:.15em;color:var(--accent)}}h1,h2,h3{{font-family:Georgia,"Noto Serif SC","Microsoft YaHei",serif;letter-spacing:-.025em}}h1{{font-size:clamp(38px,7vw,68px);line-height:1.08;margin:9px 0 16px}}header>p{{max-width:760px;color:var(--soft);font-size:18px}}.daily-quote{{max-width:760px;margin:22px 0;padding:16px 20px;border-left:3px solid #d6a756;background:#fffaf0;color:#44403c}}.daily-quote p{{margin:0;font:italic 19px/1.7 Georgia,"Noto Serif SC","Microsoft YaHei",serif}}.daily-quote footer{{margin-top:8px;color:var(--muted);font-size:12px}}.daily-quote a{{color:inherit}}nav{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--line)}}nav a{{display:flex;flex-direction:column;gap:5px;padding:22px 18px;text-decoration:none;border-right:1px solid var(--line)}}nav a:first-child{{padding-left:0}}nav a:last-child{{border:0}}nav span{{color:var(--accent);font-weight:850}}nav b{{line-height:1.45}}nav small{{color:var(--muted);line-height:1.55}}.content{{width:min(100%,760px);margin:auto}}section{{padding-top:55px}}h2{{font-size:34px;margin:8px 0}}article{{padding:29px 0;border-bottom:1px solid var(--line)}}article h3{{font-size:clamp(24px,4vw,34px);line-height:1.35;margin:8px 0 15px}}article p{{margin:10px 0}}.meta{{color:var(--muted);font-size:12px}}.number{{color:var(--accent);font-weight:850;margin-right:9px}}.foot{{display:flex;justify-content:space-between;gap:16px;margin-top:17px}}.foot a{{color:var(--blue);font-weight:750;text-decoration:none}}.tags span,.archive a{{display:inline-block;padding:4px 9px;margin-right:5px;border-radius:999px;background:#eeeae2;color:var(--soft);font-size:12px;text-decoration:none}}aside{{margin:55px 0 0;padding:22px;background:#f5f3ff;border-radius:10px;color:#4c1d95}}.archive{{margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}}@media(max-width:680px){{main{{width:min(100% - 30px,1040px);padding-top:18px}}h1{{font-size:36px}}nav{{display:block}}nav a{{border-right:0;border-bottom:1px solid var(--line);padding:16px 0}}section{{padding-top:42px}}h2{{font-size:28px}}.foot{{align-items:flex-start;flex-direction:column}}}}
 </style></head><body><main><header><div class="brand">TRENDING AI · EDITED BY CODEX</div><h1>{html.escape(issue["title"])}</h1>{quote_block}<p>{html.escape(issue["standfirst"])}</p><small>{html.escape(issue["date"])} · {html.escape(edition_label)} · {len(issue["stories"])} 条精编</small></header><nav>{guide}</nav><div class="content">{sections}<aside><b>主编手记</b><p>{html.escape(issue["editor_note"])}</p></aside><div class="archive"><div class="label">ARCHIVE</div><h2>历史日报</h2>{archive_links}</div></div></main></body></html>'''
+    page = page.replace(quote_block + "<p>", quote_block + quota + research_heading + "<p>", 1)
+    page = page.replace("</p><small>" + html.escape(issue["date"]), "</p>" + research_sources + "<small>" + html.escape(issue["date"]), 1)
+    page = page.replace("<nav>" + guide + "</nav>", '<div aria-label="本期目录">' + guide + "</div>", 1)
     (output_dir / report_name).write_text(page, encoding="utf-8")
     (output_dir / "index.html").write_text(page, encoding="utf-8")
     return report_url
